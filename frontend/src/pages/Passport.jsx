@@ -106,6 +106,34 @@ export default function Passport() {
         </div>
       </div>
 
+      {/* AI Buyer Match Engine (NBOE) */}
+      {d.buyer_matches && d.buyer_matches.matches && d.buyer_matches.matches.length > 0 && (
+        <div className="card space-y-4">
+          <div>
+            <h3 className="text-lg font-bold text-white">🎯 AI Buyer Match Engine (NBOE)</h3>
+            <p className="text-xs text-slate-400 font-medium">Instantly matching circular inventory to prospective buyers. Proximity routing: <b className="text-leaf-400 capitalize">{d.buyer_matches.routing.replace("_", " ")}</b></p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {d.buyer_matches.matches.slice(0, 3).map((m, i) => (
+              <div key={i} className="rounded-xl bg-white/5 p-4 border border-white/5 flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-white text-sm">{m.buyer_label}</span>
+                    <span className="pill text-[10px] bg-leaf-500/20 text-leaf-400 px-1.5 py-0.5 rounded-full">{m.match_score}% Match</span>
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-1">📍 {m.location} · {m.distance_miles} miles</div>
+                  <div className="text-xs text-slate-300 mt-2 italic">"{m.outreachSuggestion}"</div>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 border-t border-white/5 pt-2">
+                  <span>⚡ Prob: {m.purchaseProbability}%</span>
+                  <span>⏱ Sale: ~{m.predicted_days_to_sale} days</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Inspection */}
       {d.inspection && (
         <div className="card">

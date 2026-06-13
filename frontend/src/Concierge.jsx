@@ -82,6 +82,11 @@ export default function Concierge() {
                             <span>{r.icon}</span>
                             <span className="font-semibold text-white">{r.headline}</span>
                             <span className={`pill text-xs ${ACTION_STYLE[r.action]}`}>{Math.round(r.confidence * 100)}% confident</span>
+                            {r.is_eol && (
+                              <span className="pill bg-rose-500/20 text-rose-300 animate-pulse flex items-center gap-1 border border-rose-500/30">
+                                ⚠️ EOL Alert
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-slate-400">+${r.impact.value_recovery_usd} · {r.impact.carbon_opportunity_kg}kg · +{r.impact.green_credits_opportunity}GC</span>

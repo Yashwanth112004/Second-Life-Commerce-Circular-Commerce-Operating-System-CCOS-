@@ -81,8 +81,8 @@ export const api = {
     myOrders: () => data(http.get("/users/me/orders")),
     // returns
     initiateReturn: (body) => data(http.post("/returns/initiate", body)),
-    uploadEvidence: (returnId, formData) =>
-        data(http.post(`/returns/${returnId}/upload`, formData)),
+    uploadEvidence: (returnId, formData, role = "item") =>
+        data(http.post(`/returns/${returnId}/upload?role=${role}`, formData)),
     analyzeReturn: (returnId) => data(http.post(`/returns/${returnId}/analyze`)),
     analyzeStatus: (returnId) => data(http.get(`/returns/${returnId}/analyze/status`)),
     decideReturn: (returnId, body) => data(http.post(`/returns/${returnId}/decision`, body)),
@@ -93,6 +93,8 @@ export const api = {
     })),
     listing: (id) => data(http.get(`/marketplace/listing/${id}`)),
     buy: (id) => data(http.post(`/marketplace/buy/${id}`)),
+    predictReturn: (id, body) => data(http.post(`/marketplace/listing/${id}/predict-return`, body)),
+    sizeAdvice: (id, fitPreference = "regular") => data(http.get(`/marketplace/listing/${id}/size-advice?fitPreference=${fitPreference}`)),
     review: (id, body) => data(http.post(`/marketplace/listing/${id}/review`, body)),
     // ai
     coach: () => data(http.post("/ai/sustainability-coach")),
@@ -117,6 +119,8 @@ export const api = {
     // inspection
     inspection: (returnId) => data(http.get(`/inspection/${returnId}`)),
     inspectionPdfUrl: (returnId) => `/api/inspection/${returnId}/pdf`,
+    refurbishInstructions: (returnId, skillLevel = "intermediate", tools = []) => 
+        data(http.get(`/inspection/${returnId}/refurbish-instructions?skillLevel=${skillLevel}${tools.length ? `&tools=${tools.join(",")}` : ""}`)),
     // demo
     seedDemo: () => data(http.post("/demo/seed")),
     // concierge
@@ -124,6 +128,7 @@ export const api = {
     conciergeActivity: () => data(http.get("/concierge/activity")),
     wallet: () => data(http.get("/wallet")),
     walletHistory: () => data(http.get("/wallet/history")),
+    tradeCredits: (body) => data(http.post("/wallet/trade-credits", body)),
     carbonReport: () => data(http.get("/carbon/report")),
     // passport
     passport: (orderId) => data(http.get(`/passport/${orderId}`)),

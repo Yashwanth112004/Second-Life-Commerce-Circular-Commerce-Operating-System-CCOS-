@@ -51,6 +51,16 @@ import {
     getJob,
     ANALYSIS_STAGES
 } from "../services/jobs.js";
+import {
+    assessPackaging
+} from "../services/ai/packagingAssessment.js";
+import {
+    evaluateRDE
+} from "../services/refurbishmentDecision.js";
+import {
+    matchNGOs
+} from "../services/donationMatching.js";
+import { detectReturnFraud } from "../services/ai/fraudDetector.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -63,7 +73,7 @@ async function loadReturn(returnId, userId) {
     } = await query(
         `SELECT r.*, o.product_id, o.purchase_price, o.age_months, o.status AS order_status,
             p.title, p.brand, p.category, p.msrp, p.weight_kg, p.embedded_carbon_kg,
-            p.monthly_depreciation, p.image_url
+            p.monthly_depreciation, p.image_url, p.size
      FROM returns r
      JOIN orders o ON o.id=r.order_id
      JOIN products p ON p.id=o.product_id
@@ -128,13 +138,14 @@ router.post(
         });
         const files = req.files || [];
         const saved = [];
+        const role = req.query.role || "item";
         for (const f of files) {
             const rec = fileToRecord(f);
             const {
                 rows
             } = await query(
-                `INSERT INTO product_images (order_id, return_id, url, kind) VALUES ($1,$2,$3,$4) RETURNING *`,
-                [ret.order_id, ret.id, rec.url, rec.kind]
+                `INSERT INTO product_images (order_id, return_id, url, kind, role) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+                [ret.order_id, ret.id, rec.url, rec.kind, role]
             );
             saved.push(rows[0]);
         }
@@ -199,30 +210,11 @@ async function runAnalysisJob(ret, user) {
         setStage(ret.id, "damage_detection");
         setStage(ret.id, "condition_grading");
         const r = vision.result;
-        const assessment = await tx(async (c) => {
-            const {
-                rows
-            } = await c.query(
-                `INSERT INTO return_assessments
-          (return_id, order_id, grade, grade_label, confidence, reasoning,
-           recommended_disposition, packaging_condition, missing_accessories, source, model, product_type, severity)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
-                [
-                    ret.id, ret.order_id, r.grade, r.grade_label, r.confidence, r.reasoning,
-                    r.recommended_disposition, r.packaging_condition, JSON.stringify(r.missing_accessories || []),
-                    vision.source, vision.model || "", r.product_type || "", r.severity || 0,
-                ]
-            );
-            const a = rows[0];
-            for (const d of r.damages || []) {
-                await c.query(
-                    `INSERT INTO damage_detections (assessment_id, label, severity, confidence, location)
-           VALUES ($1,$2,$3,$4,$5)`,
-                    [a.id, d.label, d.severity || 0, d.confidence || 0, d.location || ""]
-                );
-            }
-            return a;
-        });
+
+        // Run Packaging Assessment AI (PAA)
+        const { rows: allImgs } = await query("SELECT * FROM product_images WHERE return_id=$1", [ret.id]);
+        const pkgAssessment = await assessPackaging({ images: allImgs, userId: user.id });
+        const pkg = pkgAssessment.result;
 
         // Stage: carbon analysis + disposition valuation
         setStage(ret.id, "carbon_analysis");
@@ -248,6 +240,19 @@ async function runAnalysisJob(ret, user) {
             route: "donation_local",
             action: "donation",
         });
+
+        // Run Refurbishment Decision Engine (RDE)
+        const rde = await evaluateRDE(query, {
+            grade: r.grade,
+            severity: r.severity || 0,
+            packagingScore: pkg.recyclability || 90,
+            category: ret.category,
+            msrp: ret.msrp,
+            weight: ret.weight_kg,
+            carbonSaved: carbonResell.carbon_saved_kg,
+            logisticsCost: 15
+        });
+
         const resaleNet = Math.round(price.recommended_price * (1 - COMMISSION));
         const repairCost = Math.round(ret.msrp * 0.12);
         const options = [{
@@ -273,7 +278,7 @@ async function runAnalysisJob(ret, user) {
                 green_credits: creditsForAction("donation", carbonDonate.carbon_saved_kg),
                 carbon_saved_kg: carbonDonate.carbon_saved_kg,
                 time: "1–2 days",
-                tax_receipt_value: Math.round(price.recommended_price * 0.6),
+                tax_receipt_value: rde.matrix.donate.tax_benefit || Math.round(price.recommended_price * 0.6),
                 note: "Matched to a verified NGO; instant tax receipt."
             },
             {
@@ -298,11 +303,55 @@ async function runAnalysisJob(ret, user) {
             ...o,
             score: o.money + o.carbon_saved_kg * 0.5 + o.green_credits * 0.1
         }));
-        // For severe damage (D/F) the AI's disposition takes precedence over the money score.
-        let recommended;
-        if (grade === "F") recommended = "donate";
-        else if (grade === "D") recommended = "repair";
-        else recommended = scored.reduce((a, b) => (b.score > a.score ? b : a)).path;
+        
+        // Use RDE recommended action
+        const recommended = rde.recommended;
+
+        const assessment = await tx(async (c) => {
+            const {
+                rows
+            } = await c.query(
+                `INSERT INTO return_assessments
+          (return_id, order_id, grade, grade_label, confidence, reasoning,
+           recommended_disposition, packaging_condition, missing_accessories, source, model, product_type, severity,
+           packaging_grade, packaging_reusable, packaging_recyclability, packaging_waste_score, packaging_recommendation, rde_decision_matrix)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING *`,
+                [
+                    ret.id, ret.order_id, r.grade, r.grade_label, r.confidence, r.reasoning,
+                    recommended, pkg.packagingGrade || r.packaging_condition, JSON.stringify(r.missing_accessories || []),
+                    vision.source, vision.model || "", r.product_type || "", r.severity || 0,
+                    pkg.packagingGrade, pkg.reusable === "YES", pkg.recyclability, pkg.packagingWasteScore, pkg.recommendations, JSON.stringify(rde.matrix)
+                ]
+            );
+            const a = rows[0];
+            for (const d of r.damages || []) {
+                await c.query(
+                    `INSERT INTO damage_detections (assessment_id, label, severity, confidence, location)
+           VALUES ($1,$2,$3,$4,$5)`,
+                    [a.id, d.label, d.severity || 0, d.confidence || 0, d.location || ""]
+                );
+            }
+            return a;
+        });
+
+        // Run Donation Matching (DIM)
+        const ngoRecommendations = await matchNGOs(query, {
+            category: ret.category,
+            condition: r.grade,
+            location: user.city || "Seattle",
+            fmv: Math.round(price.recommended_price * 0.6)
+        });
+
+        // Run Return Fraud Detector (RFD) - Module 12
+        const fraudResult = await detectReturnFraud(query, {
+            userId: user.id,
+            returnId: ret.id,
+            orderId: ret.order_id,
+            category: ret.category,
+            price: ret.purchase_price,
+            weightDiscrepancy: Number(r.severity || 0) > 4.0 || Math.random() < 0.05,
+            accountAgeDays: 90
+        });
 
         // Stage: buyer matching preview (real DB candidates)
         setStage(ret.id, "buyer_matching");
@@ -342,15 +391,22 @@ async function runAnalysisJob(ret, user) {
                 vision_status: "ok",
                 model_used: vision.model,
                 source: vision.source,
-                images: imgs.map((i) => ({
+                images: allImgs.map((i) => ({
                     url: i.url,
-                    kind: i.kind
+                    kind: i.kind,
+                    role: i.role
                 })),
                 assessment: {
                     ...r,
                     id: assessment.id,
                     source: vision.source,
-                    model: vision.model
+                    model: vision.model,
+                    packaging_grade: pkg.packagingGrade,
+                    packaging_reusable: pkg.reusable,
+                    packaging_recyclability: pkg.recyclability,
+                    packaging_waste_score: pkg.packagingWasteScore,
+                    packaging_recommendation: pkg.recommendations,
+                    packaging_reasoning: pkg.reasoning
                 },
                 root_cause: {
                     ...rc.result,
@@ -360,7 +416,11 @@ async function runAnalysisJob(ret, user) {
                 pricing: price,
                 options: scored,
                 recommended,
+                rde,
+                packaging: pkg,
+                ngo_recommendations: ngoRecommendations,
                 buyer_preview: buyerPreview,
+                fraud_detection: fraudResult,
             },
         });
     } catch (e) {
@@ -498,28 +558,39 @@ router.post(
                 action: "resale",
             });
             const gc = creditsForAction("resale", carbon.carbon_saved_kg);
+
+            // Packaging assessment circularity tracking
+            const packagingGrade = assessment ? assessment.packaging_grade : 'A';
+            const packagingReusable = assessment ? (assessment.packaging_reusable === true || assessment.packaging_reusable === 'YES') : true;
+            const packagingRecyclability = assessment ? Number(assessment.packaging_recyclability) : 96.00;
+            const packagingWasteScore = assessment ? Number(assessment.packaging_waste_score) : 4.00;
+
+            const isReused = packagingReusable ? 1 : 0;
+            const isRecycled = !packagingReusable && packagingRecyclability > 50 ? 1 : 0;
+            const packagingWasteAvoided = isReused ? 0.25 : (isRecycled ? 0.15 : 0.0);
+
             const out = await tx(async (c) => {
                 const {
                     rows: lrows
                 } = await c.query(
                     `INSERT INTO marketplace_listings
             (order_id, product_id, seller_id, marketplace, title, description, price,
-             condition_grade, keywords, features, status)
-           VALUES ($1,$2,$3,'certified_preloved',$4,$5,$6,$7,$8,$9,'active') RETURNING *`,
+             condition_grade, keywords, features, status, size)
+           VALUES ($1,$2,$3,'certified_preloved',$4,$5,$6,$7,$8,$9,'active',$10) RETURNING *`,
                     [ret.order_id, ret.product_id, req.user.id, gen.result.title, gen.result.description,
-                        price.recommended_price, grade, JSON.stringify(gen.result.keywords), JSON.stringify(gen.result.features)
+                        price.recommended_price, grade, JSON.stringify(gen.result.keywords), JSON.stringify(gen.result.features), ret.size || "M"
                     ]
                 );
                 const listing = lrows[0];
                 await c.query(
-                    `INSERT INTO carbon_events (user_id, order_id, action, carbon_saved_kg, water_saved_l, waste_diverted_kg, manufacturing_avoided_kg)
-           VALUES ($1,$2,'resale',$3,$4,$5,$6)`,
-                    [req.user.id, ret.order_id, carbon.carbon_saved_kg, carbon.water_saved_l, carbon.waste_diverted_kg, carbon.manufacturing_avoided_kg]
+                    `INSERT INTO carbon_events (user_id, order_id, action, carbon_saved_kg, water_saved_l, waste_diverted_kg, manufacturing_avoided_kg, packaging_reused, packaging_recycled, packaging_waste_avoided_kg)
+           VALUES ($1,$2,'resale',$3,$4,$5,$6,$7,$8,$9)`,
+                    [req.user.id, ret.order_id, carbon.carbon_saved_kg, carbon.water_saved_l, carbon.waste_diverted_kg, carbon.manufacturing_avoided_kg, packagingReusable, !packagingReusable && packagingRecyclability > 50, packagingWasteAvoided]
                 );
                 await c.query(
                     `UPDATE wallets SET carbon_saved_kg=carbon_saved_kg+$2, water_saved_l=water_saved_l+$3,
-             waste_diverted_kg=waste_diverted_kg+$4, updated_at=now() WHERE user_id=$1`,
-                    [req.user.id, carbon.carbon_saved_kg, carbon.water_saved_l, carbon.waste_diverted_kg]
+             waste_diverted_kg=waste_diverted_kg+$4, packaging_reused_count=packaging_reused_count+$5, packaging_recycled_count=packaging_recycled_count+$6, packaging_waste_diverted_kg=packaging_waste_diverted_kg+$7, updated_at=now() WHERE user_id=$1`,
+                    [req.user.id, carbon.carbon_saved_kg, carbon.water_saved_l, carbon.waste_diverted_kg, isReused, isRecycled, packagingWasteAvoided]
                 );
                 const credit = await awardCredits(c, {
                     userId: req.user.id,
@@ -584,28 +655,50 @@ router.post(
                 action: "donation",
             });
             const gc = creditsForAction("donation", carbon.carbon_saved_kg);
+
+            // Packaging assessment circularity tracking
+            const packagingGrade = assessment ? assessment.packaging_grade : 'A';
+            const packagingReusable = assessment ? (assessment.packaging_reusable === true || assessment.packaging_reusable === 'YES') : true;
+            const packagingRecyclability = assessment ? Number(assessment.packaging_recyclability) : 96.00;
+            const packagingWasteScore = assessment ? Number(assessment.packaging_waste_score) : 4.00;
+
+            const isReused = packagingReusable ? 1 : 0;
+            const isRecycled = !packagingReusable && packagingRecyclability > 50 ? 1 : 0;
+            const packagingWasteAvoided = isReused ? 0.25 : (isRecycled ? 0.15 : 0.0);
+
             const out = await tx(async (c) => {
+                // Look up matching NGO
+                const { rows: ngoRows } = await c.query(
+                    `SELECT id, beneficiary_type FROM ngos WHERE name = $1 LIMIT 1`,
+                    [ngoName || "Red Cross Seattle"]
+                );
+                const ngoId = ngoRows[0] ? ngoRows[0].id : null;
+                const fmv = Math.round(price.recommended_price * 0.6);
+                const taxBenefit = Math.round(fmv * 0.30);
+
                 const {
                     rows
                 } = await c.query(
-                    `INSERT INTO donations (order_id, donor_id, ngo_name, fair_market_value, tax_receipt_id, status, impact_stage, impact_detail)
-           VALUES ($1,$2,$3,$4,$5,'confirmed','received',$6) RETURNING *`,
-                    [ret.order_id, req.user.id, ngoName || "Goodwill Industries", Math.round(price.recommended_price * 0.6), `TR-${Date.now()}`,
+                    `INSERT INTO donations (order_id, donor_id, ngo_name, fair_market_value, tax_receipt_id, status, impact_stage, impact_detail, ngo_id, tax_benefit)
+           VALUES ($1,$2,$3,$4,$5,'confirmed','received',$6,$7,$8) RETURNING *`,
+                    [ret.order_id, req.user.id, ngoName || "Red Cross Seattle", fmv, `TR-${Date.now()}`,
                         JSON.stringify({
-                            recipient: ngoName || "Goodwill Industries",
+                            recipient: ngoName || "Red Cross Seattle",
                             end_use: "community redistribution",
-                            est_meals: Math.round(price.recommended_price * 0.6 * 3)
-                        })
+                            est_meals: Math.round(fmv * 3)
+                        }),
+                        ngoId, taxBenefit
                     ]
                 );
                 await c.query(
-                    `INSERT INTO carbon_events (user_id, order_id, action, carbon_saved_kg, water_saved_l, waste_diverted_kg, manufacturing_avoided_kg)
-           VALUES ($1,$2,'donation',$3,$4,$5,$6)`,
-                    [req.user.id, ret.order_id, carbon.carbon_saved_kg, carbon.water_saved_l, carbon.waste_diverted_kg, carbon.manufacturing_avoided_kg]
+                    `INSERT INTO carbon_events (user_id, order_id, action, carbon_saved_kg, water_saved_l, waste_diverted_kg, manufacturing_avoided_kg, packaging_reused, packaging_recycled, packaging_waste_avoided_kg)
+           VALUES ($1,$2,'donation',$3,$4,$5,$6,$7,$8,$9)`,
+                    [req.user.id, ret.order_id, carbon.carbon_saved_kg, carbon.water_saved_l, carbon.waste_diverted_kg, carbon.manufacturing_avoided_kg, packagingReusable, !packagingReusable && packagingRecyclability > 50, packagingWasteAvoided]
                 );
                 await c.query(
-                    `UPDATE wallets SET carbon_saved_kg=carbon_saved_kg+$2, waste_diverted_kg=waste_diverted_kg+$3 WHERE user_id=$1`,
-                    [req.user.id, carbon.carbon_saved_kg, carbon.waste_diverted_kg]
+                    `UPDATE wallets SET carbon_saved_kg=carbon_saved_kg+$2, waste_diverted_kg=waste_diverted_kg+$3,
+             packaging_reused_count=packaging_reused_count+$4, packaging_recycled_count=packaging_recycled_count+$5, packaging_waste_diverted_kg=packaging_waste_diverted_kg+$6, updated_at=now() WHERE user_id=$1`,
+                    [req.user.id, carbon.carbon_saved_kg, carbon.waste_diverted_kg, isReused, isRecycled, packagingWasteAvoided]
                 );
                 const credit = await awardCredits(c, {
                     userId: req.user.id,
@@ -615,7 +708,7 @@ router.post(
                 });
                 await c.query(`INSERT INTO product_passports (order_id, event_type, detail, actor) VALUES ($1,'donation',$2,'Second Life Commerce')`,
                     [ret.order_id, JSON.stringify({
-                        ngo: ngoName || "Goodwill Industries"
+                        ngo: ngoName || "Red Cross Seattle"
                     })]);
                 await c.query("UPDATE orders SET status='donated' WHERE id=$1", [ret.order_id]);
                 await c.query("UPDATE returns SET chosen_path='donate', status='completed' WHERE id=$1", [ret.id]);

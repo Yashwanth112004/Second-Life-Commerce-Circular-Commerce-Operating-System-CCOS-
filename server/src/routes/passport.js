@@ -13,6 +13,9 @@ import {
 import {
     computeCES
 } from "../services/ces.js";
+import {
+    findBuyers
+} from "../services/nextBestOwner.js";
 
 const router = Router();
 
@@ -66,10 +69,14 @@ router.get(
         const {
             rows: orows
         } = await query(
-            `SELECT o.id, o.order_number, o.status, o.purchased_at, o.age_months, o.purchase_price,
+            `SELECT o.id, o.order_number, o.status, o.purchased_at, o.age_months, o.purchase_price, o.user_id,
               p.title, p.brand, p.category, p.msrp, p.image_url, p.embedded_carbon_kg,
-              p.weight_kg, p.monthly_depreciation, p.eco_score
-       FROM orders o JOIN products p ON p.id=o.product_id WHERE o.id=$1`,
+              p.weight_kg, p.monthly_depreciation, p.eco_score,
+              u.city
+       FROM orders o 
+       JOIN products p ON p.id=o.product_id 
+       JOIN users u ON u.id=o.user_id
+       WHERE o.id=$1`,
             [req.params.orderId]
         );
         if (!orows[0]) return res.status(404).json({
@@ -162,6 +169,15 @@ router.get(
             ageMonths: o.age_months
         });
 
+        // Query NBOE for Next Best Owners
+        const buyers = await findBuyers(query, {
+            orderId: o.id,
+            category: o.category,
+            price: twin.current_value,
+            sellerId: o.user_id,
+            sellerCity: o.city || "Seattle"
+        });
+
         res.json({
             order: o,
             current_grade: grade,
@@ -179,6 +195,7 @@ router.get(
             ownership_history: owners.rows,
             repair_history: repairs.rows,
             story,
+            buyer_matches: buyers
         });
     })
 );

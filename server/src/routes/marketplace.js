@@ -22,6 +22,10 @@ import {
     creditsForAction,
     awardCredits
 } from "../services/greenCredits.js";
+import {
+    predictReturn
+} from "../services/returnPrediction.js";
+import { adviseSize } from "../services/ai/sizeAdvisor.js";
 
 const router = Router();
 
@@ -159,6 +163,39 @@ router.get(
 // Authenticated actions below
 router.use(requireAuth);
 
+router.post(
+    "/listing/:id/predict-return",
+    asyncHandler(async (req, res) => {
+        const {
+            rows
+        } = await query(
+            `SELECT ml.*, p.category, p.brand, p.msrp, p.listing_quality_score
+             FROM marketplace_listings ml
+             JOIN products p ON p.id = ml.product_id
+             WHERE ml.id = $1`,
+            [req.params.id]
+        );
+        const listing = rows[0];
+        if (!listing) return res.status(404).json({
+            error: "Listing not found"
+        });
+
+        const { behavior = {}, context = {} } = req.body;
+        const result = await predictReturn(query, {
+            userId: req.user.id,
+            productId: listing.product_id,
+            listingId: listing.id,
+            category: listing.category,
+            price: Number(listing.price),
+            brand: listing.brand,
+            listingQualityScore: listing.listing_quality_score || 85,
+            behavior,
+            context
+        });
+        res.json(result);
+    })
+);
+
 const listSchema = z.object({
     productId: z.string().uuid(),
     marketplace: z.enum(["certified_preloved", "rental", "exchange", "donation", "parts", "p2p"]).default("certified_preloved"),
@@ -218,7 +255,7 @@ router.post(
         const out = await tx(async (c) => {
             await c.query("UPDATE marketplace_listings SET status='sold' WHERE id=$1", [req.params.id]);
             if (listing.order_id) {
-                await c.query("UPDATE orders SET status='sold', user_id=$2 WHERE id=$1", [listing.order_id, req.user.id]);
+                await c.query("UPDATE orders SET status='owned', user_id=$2 WHERE id=$1", [listing.order_id, req.user.id]);
                 await c.query(`INSERT INTO ownership_history (order_id, owner_id, owner_label) VALUES ($1,$2,$3)`,
                     [listing.order_id, req.user.id, req.user.name]);
                 await c.query(`INSERT INTO product_passports (order_id, event_type, detail, actor) VALUES ($1,'ownership_transfer',$2,'Second Life Commerce')`,
@@ -296,6 +333,33 @@ router.post(
         await query(`INSERT INTO notifications (user_id, kind, title, body) VALUES ($1,'message','New message about your listing',$2)`,
             [lr[0].seller_id, req.body.body.slice(0, 120)]);
         res.status(201).json(rows[0]);
+    })
+);
+
+// Smart Size Advisor (SSA) - Module 8
+router.get(
+    "/listing/:id/size-advice",
+    requireAuth,
+    asyncHandler(async (req, res) => {
+        const { rows } = await query(
+            `SELECT ml.*, p.brand, p.category 
+             FROM marketplace_listings ml 
+             JOIN products p ON p.id = ml.product_id 
+             WHERE ml.id = $1`,
+            [req.params.id]
+        );
+        const listing = rows[0];
+        if (!listing) return res.status(404).json({ error: "Listing not found" });
+
+        const advice = await adviseSize(query, {
+            userId: req.user.id,
+            productId: listing.product_id,
+            brand: listing.brand || "Generic",
+            category: listing.category,
+            fitPreference: req.query.fitPreference || "regular"
+        });
+
+        res.json(advice);
     })
 );
 

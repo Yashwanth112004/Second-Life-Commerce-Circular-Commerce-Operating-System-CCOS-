@@ -21,6 +21,7 @@ import {
 import {
     UPLOAD_DIR
 } from "../middleware/upload.js";
+import { generateRefurbishInstructions } from "../services/ai/refurbishInstructions.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -148,6 +149,27 @@ router.get(
             width: 460
         });
         doc.end();
+    })
+);
+
+// Real-Time Refurbishment Instruction Generator (RRIG) - Module 25
+router.get(
+    "/:returnId/refurbish-instructions",
+    asyncHandler(async (req, res) => {
+        const ins = await loadInspection(req.params.returnId, req.user.id);
+        if (!ins) return res.status(404).json({ error: "Inspection not found" });
+
+        const skillLevel = req.query.skillLevel || "intermediate";
+        const availableTools = req.query.tools ? req.query.tools.split(",") : ["microfiber cloth", "cleaning solution", "screwdrivers", "glue"];
+
+        const instructions = await generateRefurbishInstructions(query, {
+            returnId: req.params.returnId,
+            userId: req.user.id,
+            skillLevel,
+            availableTools
+        });
+
+        res.json(instructions);
     })
 );
 

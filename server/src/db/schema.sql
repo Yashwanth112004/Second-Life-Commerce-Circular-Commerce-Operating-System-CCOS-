@@ -37,8 +37,11 @@ CREATE TABLE IF NOT EXISTS wallets (
   carbon_saved_kg   NUMERIC(14,2) NOT NULL DEFAULT 0,
   water_saved_l     NUMERIC(14,2) NOT NULL DEFAULT 0,
   waste_diverted_kg NUMERIC(14,2) NOT NULL DEFAULT 0,
+  usd_balance       NUMERIC(14,2) NOT NULL DEFAULT 0.00,
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE wallets ADD COLUMN IF NOT EXISTS usd_balance NUMERIC(14,2) NOT NULL DEFAULT 0.00;
 
 -- ---------------------------------------------------------------------------
 -- Catalog, ownership, orders
@@ -354,3 +357,77 @@ CREATE TABLE IF NOT EXISTS enterprise_metrics (
   return_rate     NUMERIC(5,4) DEFAULT 0,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ===========================================================================
+-- CCOS AI INNOVATION MODULES ADDITIONS
+-- ===========================================================================
+
+-- 1. NGOs Database
+CREATE TABLE IF NOT EXISTS ngos (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name            TEXT UNIQUE NOT NULL,
+  description     TEXT DEFAULT '',
+  category_needs  JSONB DEFAULT '[]',
+  capacity_status TEXT DEFAULT 'open',
+  city            TEXT DEFAULT 'Seattle',
+  distance_miles  NUMERIC(8,1),
+  urgency_score   INT DEFAULT 50,
+  beneficiary_type TEXT DEFAULT 'General',
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 2. Wishlists Table
+CREATE TABLE IF NOT EXISTS wishlists (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID REFERENCES users(id) ON DELETE CASCADE,
+  product_id      UUID REFERENCES products(id) ON DELETE CASCADE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 3. Browsing History Table
+CREATE TABLE IF NOT EXISTS browsing_history (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID REFERENCES users(id) ON DELETE CASCADE,
+  product_id      UUID REFERENCES products(id) ON DELETE CASCADE,
+  viewed_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 4. Alterations to users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS size_preference TEXT DEFAULT 'M';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS price_sensitivity TEXT DEFAULT 'medium';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS sustainability_score INT DEFAULT 75;
+
+-- 5. Alterations to products
+ALTER TABLE products ADD COLUMN IF NOT EXISTS size TEXT DEFAULT 'M';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS listing_quality_score INT DEFAULT 85;
+
+-- 6. Alterations to marketplace_listings
+ALTER TABLE marketplace_listings ADD COLUMN IF NOT EXISTS size TEXT DEFAULT 'M';
+ALTER TABLE marketplace_listings ADD COLUMN IF NOT EXISTS expected_sale_time_days INT DEFAULT 5;
+ALTER TABLE marketplace_listings ADD COLUMN IF NOT EXISTS markdown_schedule JSONB DEFAULT '[]';
+
+-- 7. Alterations to return_assessments
+ALTER TABLE return_assessments ADD COLUMN IF NOT EXISTS packaging_grade TEXT DEFAULT 'A';
+ALTER TABLE return_assessments ADD COLUMN IF NOT EXISTS packaging_reusable BOOLEAN DEFAULT TRUE;
+ALTER TABLE return_assessments ADD COLUMN IF NOT EXISTS packaging_recyclability NUMERIC(5,2) DEFAULT 96.00;
+ALTER TABLE return_assessments ADD COLUMN IF NOT EXISTS packaging_waste_score NUMERIC(5,2) DEFAULT 4.00;
+ALTER TABLE return_assessments ADD COLUMN IF NOT EXISTS packaging_recommendation TEXT DEFAULT 'Reuse Original Packaging';
+ALTER TABLE return_assessments ADD COLUMN IF NOT EXISTS rde_decision_matrix JSONB DEFAULT '{}';
+
+-- 8. Alterations to donations
+ALTER TABLE donations ADD COLUMN IF NOT EXISTS ngo_id UUID REFERENCES ngos(id) ON DELETE SET NULL;
+ALTER TABLE donations ADD COLUMN IF NOT EXISTS tax_benefit NUMERIC(12,2) DEFAULT 0;
+
+-- 9. Alterations to wallets
+ALTER TABLE wallets ADD COLUMN IF NOT EXISTS packaging_reused_count INT DEFAULT 0;
+ALTER TABLE wallets ADD COLUMN IF NOT EXISTS packaging_recycled_count INT DEFAULT 0;
+ALTER TABLE wallets ADD COLUMN IF NOT EXISTS packaging_waste_diverted_kg NUMERIC(10,2) DEFAULT 0;
+
+-- 10. Alterations to carbon_events
+ALTER TABLE carbon_events ADD COLUMN IF NOT EXISTS packaging_reused BOOLEAN DEFAULT FALSE;
+ALTER TABLE carbon_events ADD COLUMN IF NOT EXISTS packaging_recycled BOOLEAN DEFAULT FALSE;
+ALTER TABLE carbon_events ADD COLUMN IF NOT EXISTS packaging_waste_avoided_kg NUMERIC(10,2) DEFAULT 0;
+
+-- 11. Alterations to product_images
+ALTER TABLE product_images ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'item';
+

@@ -41,6 +41,9 @@ function CommandCenter() {
   const d = dash.data;
   const s = score.data;
   const m = d.marketplace || {};
+  const eolOrderIds = new Set(
+    ara.data?.suggestions?.filter((x) => x.is_eol).map((x) => x.order_id) || []
+  );
 
   return (
     <>
@@ -94,7 +97,12 @@ function CommandCenter() {
                 <img src={o.product.image_url} alt="" className="h-12 w-12 rounded object-cover" onError={(e) => (e.currentTarget.style.visibility = "hidden")} />
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold text-white">{o.product.title}</div>
-                  <div className="text-xs text-slate-400">est ${o.estimated_value} · {o.status}</div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-slate-400">est ${o.estimated_value} · {o.status}</span>
+                    {eolOrderIds.has(o.id) && (
+                      <span className="pill text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/20 animate-pulse">⚠️ EOL Alert</span>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}
@@ -160,6 +168,53 @@ function EnterpriseDash({ isAdmin }) {
         <Stat label="Waste diverted" value={`${d.esg.waste_diverted_kg} kg`} />
         <Stat label="Diversion rate" value={`${d.diversion_rate_pct}%`} sub={`${d.circular_returns}/${d.total_returns} returns`} />
       </div>
+
+      {/* Donation Impact Summary */}
+      {d.donations && (
+        <div className="card space-y-3">
+          <h3 className="font-bold text-white">🎁 Donation Impact & Social Utility</h3>
+          <div className="grid gap-4 sm:grid-cols-4">
+            <div className="rounded-lg bg-white/5 p-3 text-center">
+              <div className="text-xl font-bold text-leaf-400">{d.donations.items_donated}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider">Items Donated</div>
+            </div>
+            <div className="rounded-lg bg-white/5 p-3 text-center">
+              <div className="text-xl font-bold text-leaf-400">{d.donations.people_impacted}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider">People Impacted</div>
+            </div>
+            <div className="rounded-lg bg-white/5 p-3 text-center">
+              <div className="text-xl font-bold text-leaf-400">${d.donations.total_value}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider">Donated Value (FMV)</div>
+            </div>
+            <div className="rounded-lg bg-white/5 p-3 text-center">
+              <div className="text-xl font-bold text-leaf-400">${d.donations.tax_benefits}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider">Tax Benefits Saved</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Packaging Intelligence Summary */}
+      {d.packaging && (
+        <div className="card space-y-3">
+          <h3 className="font-bold text-white">📦 Packaging Assessment Circularity</h3>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-lg bg-white/5 p-3 text-center">
+              <div className="text-xl font-bold text-leaf-400">{d.packaging.reused}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider">Original Boxes Reused</div>
+            </div>
+            <div className="rounded-lg bg-white/5 p-3 text-center">
+              <div className="text-xl font-bold text-leaf-400">{d.packaging.recycled}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider">Boxes Recycled</div>
+            </div>
+            <div className="rounded-lg bg-white/5 p-3 text-center">
+              <div className="text-xl font-bold text-leaf-400">{d.packaging.waste_avoided_kg} kg</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider">Packaging Waste Diverted</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="card">
         <h3 className="mb-3 font-bold text-white">Carbon saved by month (platform)</h3>
         {d.carbon_by_month.length === 0 ? <p className="text-sm text-slate-400">No carbon events yet.</p> : (
@@ -175,15 +230,85 @@ function EnterpriseDash({ isAdmin }) {
           </ResponsiveContainer>
         )}
       </div>
+
       {isAdmin && analytics.data && (
-        <div className="card">
-          <h3 className="mb-3 font-bold text-white">Platform analytics (admin)</h3>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label="Users" value={analytics.data.users} />
-            <Stat label="Orders" value={analytics.data.orders} />
-            <Stat label="AI calls" value={analytics.data.ai_calls} sub={`${analytics.data.ai_real} real`} />
-            <Stat label="Listings" value={analytics.data.listings} />
+        <div className="space-y-6">
+          <div className="card">
+            <h3 className="mb-3 font-bold text-white">Platform analytics (admin)</h3>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <Stat label="Users" value={analytics.data.users} />
+              <Stat label="Orders" value={analytics.data.orders} />
+              <Stat label="AI calls" value={analytics.data.ai_calls} sub={`${analytics.data.ai_real} real`} />
+              <Stat label="Listings" value={analytics.data.listings} />
+            </div>
           </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Return Risk Distribution */}
+            <div className="card space-y-3">
+              <h3 className="font-bold text-white">♺ Return Risk Distribution</h3>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                {analytics.data.risk_distribution && analytics.data.risk_distribution.length > 0 ? (
+                  analytics.data.risk_distribution.map((r) => (
+                    <div key={r.risk_level} className="rounded-lg bg-white/5 p-3">
+                      <div className={`text-xl font-bold ${
+                        r.risk_level === "HIGH" ? "text-rose-400" : r.risk_level === "MEDIUM" ? "text-amber-400" : "text-emerald-400"
+                      }`}>{r.count}</div>
+                      <div className="text-slate-500 uppercase tracking-wider text-[9px]">{r.risk_level} Risk</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-3 text-slate-500 py-3">No return intent predictions logged yet.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Categories with Highest Risk */}
+            <div className="card space-y-3">
+              <h3 className="font-bold text-white">🏷 Return Risk by Category</h3>
+              <div className="space-y-2">
+                {analytics.data.category_risk && analytics.data.category_risk.length > 0 ? (
+                  analytics.data.category_risk.map((c) => (
+                    <div key={c.category} className="flex items-center justify-between text-xs rounded-lg bg-white/5 px-3 py-2">
+                      <span className="text-slate-300 capitalize">{c.category}</span>
+                      <span className="font-bold text-amber-300">{c.avg_probability}% risk</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-slate-500 py-2 text-center text-xs">No return intent predictions on file.</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Products causing future returns */}
+          {analytics.data.product_risk && analytics.data.product_risk.length > 0 && (
+            <div className="card">
+              <h3 className="mb-3 font-bold text-white">⚠️ Top Products Flagged for Future Returns</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10 text-slate-400">
+                      <th className="py-2">Product ID</th>
+                      <th className="py-2">Brand</th>
+                      <th className="py-2">Category</th>
+                      <th className="py-2 text-right">Avg Risk Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analytics.data.product_risk.map((p) => (
+                      <tr key={p.product_id} className="border-b border-white/5 text-slate-300 hover:bg-white/5">
+                        <td className="py-2 font-mono text-[10px]">{p.product_id}</td>
+                        <td className="py-2">{p.brand}</td>
+                        <td className="py-2 capitalize">{p.category}</td>
+                        <td className="py-2 text-right font-bold text-rose-400">{p.avg_probability}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

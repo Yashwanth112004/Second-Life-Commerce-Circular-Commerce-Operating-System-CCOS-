@@ -65,19 +65,37 @@ router.get("/ai-logs", asyncHandler(async (req, res) => {
 }));
 
 router.get("/analytics", asyncHandler(async (_req, res) => {
-    const {
-        rows
-    } = await query(`
-    SELECT
-      (SELECT COUNT(*)::int FROM users) users,
-      (SELECT COUNT(*)::int FROM orders) orders,
-      (SELECT COUNT(*)::int FROM returns) returns,
-      (SELECT COUNT(*)::int FROM marketplace_listings) listings,
-      (SELECT COUNT(*)::int FROM ai_predictions) ai_calls,
-      (SELECT COUNT(*)::int FROM ai_predictions WHERE source='ai') ai_real,
-      (SELECT COALESCE(SUM(carbon_saved_kg),0) FROM carbon_events) carbon
-  `);
-    res.json(rows[0]);
+    const [counts, risks, categories, products] = await Promise.all([
+        query(`
+            SELECT
+              (SELECT COUNT(*)::int FROM users) users,
+              (SELECT COUNT(*)::int FROM orders) orders,
+              (SELECT COUNT(*)::int FROM returns) returns,
+              (SELECT COUNT(*)::int FROM marketplace_listings) listings,
+              (SELECT COUNT(*)::int FROM ai_predictions) ai_calls,
+              (SELECT COUNT(*)::int FROM ai_predictions WHERE source='ai') ai_real,
+              (SELECT COALESCE(SUM(carbon_saved_kg),0) FROM carbon_events) carbon
+        `),
+        query(`
+            SELECT COALESCE(output->>'riskLevel', 'LOW') AS risk_level, COUNT(*)::int AS count 
+            FROM ai_predictions WHERE module='return_intent' GROUP BY 1
+        `),
+        query(`
+            SELECT COALESCE(input->>'category', 'unknown') AS category, ROUND(AVG((output->>'returnProbability')::numeric), 1)::float AS avg_probability 
+            FROM ai_predictions WHERE module='return_intent' AND output->>'returnProbability' IS NOT NULL GROUP BY 1 ORDER BY avg_probability DESC
+        `),
+        query(`
+            SELECT COALESCE(input->>'productId', 'unknown') AS product_id, MAX(input->>'brand') AS brand, MAX(input->>'category') AS category, ROUND(AVG((output->>'returnProbability')::numeric), 1)::float AS avg_probability 
+            FROM ai_predictions WHERE module='return_intent' AND output->>'returnProbability' IS NOT NULL GROUP BY 1 ORDER BY avg_probability DESC LIMIT 10
+        `)
+    ]);
+
+    res.json({
+        ...counts.rows[0],
+        risk_distribution: risks.rows,
+        category_risk: categories.rows,
+        product_risk: products.rows
+    });
 }));
 
 export default router;

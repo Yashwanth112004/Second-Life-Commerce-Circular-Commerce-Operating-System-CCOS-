@@ -100,7 +100,7 @@ router.get(
     "/enterprise",
     requireRole("enterprise", "admin"),
     asyncHandler(async (_req, res) => {
-        const [gmv, carbon, returns, monthly] = await Promise.all([
+        const [gmv, carbon, returns, monthly, donations, packaging] = await Promise.all([
             query("SELECT COALESCE(SUM(price),0) gmv, COUNT(*)::int n FROM marketplace_listings WHERE status='sold'"),
             query("SELECT COALESCE(SUM(carbon_saved_kg),0) carbon, COALESCE(SUM(waste_diverted_kg),0) waste, COALESCE(SUM(water_saved_l),0) water FROM carbon_events"),
             query(
@@ -112,9 +112,22 @@ router.get(
                 `SELECT to_char(date_trunc('month', created_at),'YYYY-MM') ym, COALESCE(SUM(carbon_saved_kg),0) carbon
          FROM carbon_events GROUP BY 1 ORDER BY 1`
             ),
+            query(
+                `SELECT COUNT(*)::int AS items_donated, COALESCE(SUM(fair_market_value),0) AS total_value, COALESCE(SUM(tax_benefit),0) AS total_tax
+                 FROM donations`
+            ),
+            query(
+                `SELECT COALESCE(SUM(packaging_waste_avoided_kg), 0) AS waste_avoided,
+                        COUNT(CASE WHEN packaging_reused=true THEN 1 END)::int AS reused,
+                        COUNT(CASE WHEN packaging_recycled=true THEN 1 END)::int AS recycled
+                 FROM carbon_events`
+            )
         ]);
         const r = returns.rows[0];
         const diversionRate = r.total_returns ? Math.round((r.circular_returns / r.total_returns) * 100) : 0;
+        const donationData = donations.rows[0];
+        const packagingData = packaging.rows[0];
+
         res.json({
             circular_gmv: Number(gmv.rows[0].gmv),
             circular_transactions: gmv.rows[0].n,
@@ -130,6 +143,17 @@ router.get(
                 month: m.ym,
                 carbon: Number(m.carbon)
             })),
+            donations: {
+                items_donated: donationData.items_donated,
+                people_impacted: donationData.items_donated * 4,
+                total_value: Number(donationData.total_value),
+                tax_benefits: Number(donationData.total_tax)
+            },
+            packaging: {
+                reused: packagingData.reused,
+                recycled: packagingData.recycled,
+                waste_avoided_kg: Number(packagingData.waste_avoided)
+            }
         });
     })
 );

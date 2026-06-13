@@ -114,6 +114,7 @@ export async function buildRecommendations(query, user) {
             headline: `${meta.verb}: ${s.product.title}`,
             summary: s.reason,
             confidence,
+            is_eol: s.is_eol,
             reasons: reasonsFor(s),
             impact: {
                 value_recovery_usd: valueRecovery,
@@ -129,6 +130,26 @@ export async function buildRecommendations(query, user) {
             },
         };
     });
+
+    // Check and create EOL notifications dynamically
+    for (const s of plan.suggestions) {
+        if (s.is_eol) {
+            try {
+                const { rows: existing } = await query(
+                    `SELECT id FROM notifications WHERE user_id=$1 AND title='Predictive End-of-Life Notification' AND body LIKE $2`,
+                    [user.id, `%${s.product.title}%`]
+                );
+                if (existing.length === 0) {
+                    await query(
+                        `INSERT INTO notifications (user_id, kind, title, body) VALUES ($1, 'eol', 'Predictive End-of-Life Notification', $2)`,
+                        [user.id, `Your item (${s.product.title}) will reach near-zero resale value in ~3 months. List now for $${s.estimated_value}.`]
+                    );
+                }
+            } catch (err) {
+                console.error("[EOL Notification Check Error]:", err.message);
+            }
+        }
+    }
 
     // Rank: actionable first, by confidence then value.
     const actionRank = {
