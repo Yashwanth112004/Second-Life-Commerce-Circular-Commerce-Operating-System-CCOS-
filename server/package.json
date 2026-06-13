@@ -1,0 +1,29 @@
+{
+    "name": "ccos-server",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "description": "Second Life Commerce — production API (Express + PostgreSQL + OpenRouter)",
+    "scripts": {
+        "dev": "node --watch src/server.js",
+        "start": "node src/server.js",
+        "migrate": "node src/db/migrate.js",
+        "seed": "node src/db/seed.js"
+    },
+    "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "cloudinary": "^2.5.1",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.21.1",
+        "express-rate-limit": "^7.4.1",
+        "helmet": "^8.0.0",
+        "jsonwebtoken": "^9.0.2",
+        "morgan": "^1.10.0",
+        "multer": "^2.1.1",
+        "pdfkit": "^0.15.2",
+        "pg": "^8.13.1",
+        "uuid": "^11.0.3",
+        "zod": "^3.23.8"
+    }
+}

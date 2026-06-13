@@ -1,0 +1,17 @@
+# Python (legacy)
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+frontend/dist/
+.env
+server/.env
+
+# Server runtime
+server/uploads/
+server/testimg/
+server/test-vision.mjs
+
+# misc
+*.log

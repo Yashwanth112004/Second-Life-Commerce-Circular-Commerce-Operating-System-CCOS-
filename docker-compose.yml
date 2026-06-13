@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ccos_db
+    environment:
+      POSTGRES_USER: ccos
+      POSTGRES_PASSWORD: ccos_dev_password
+      POSTGRES_DB: ccos
+    ports:
+      - "5433:5432"
+    volumes:
+      - ccos_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ccos -d ccos"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./server
+    container_name: ccos_api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgres://ccos:ccos_dev_password@db:5432/ccos
+      CORS_ORIGIN: http://localhost:5173
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me-access}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-refresh}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-nvidia/nemotron-3-super-120b-a12b:free}
+    ports:
+      - "4000:4000"
+    volumes:
+      - ccos_uploads:/app/uploads
+
+  adminer:
+    image: adminer:latest
+    container_name: ccos_adminer
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+
+volumes:
+  ccos_pgdata:
+  ccos_uploads:
