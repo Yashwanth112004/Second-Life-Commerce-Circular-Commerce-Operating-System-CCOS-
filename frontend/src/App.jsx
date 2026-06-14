@@ -34,9 +34,9 @@ function Nav() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-ink-950/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
-        <NavLink to="/" className="flex items-center gap-2 font-extrabold text-white">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-leaf-500 text-ink-950">♺</span>
-          Second Life<span className="text-leaf-400">Commerce</span>
+        <NavLink to="/" className="flex items-center gap-2 font-extrabold text-white text-lg tracking-tight">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-leaf-500 text-ink-950 font-black">♺</span>
+          amazon<span className="text-leaf-400 font-normal"> second life</span>
         </NavLink>
         <nav className="flex items-center gap-1">
           {links
@@ -90,7 +90,7 @@ export default function App() {
         </Routes>
       </main>
       <footer className="border-t border-white/10 py-8 text-center text-sm text-slate-500">
-        Second Life Commerce — Circular Commerce Operating System
+        Amazon Second Life — Circular Commerce Operating System
       </footer>
     </div>
   );
