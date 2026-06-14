@@ -6,7 +6,7 @@
 export async function matchNGOs(db, {
   category = "electronics",
   condition = "B",
-  location = "Seattle",
+  location = "Bengaluru",
   fmv = 100
 }) {
   const itemCategory = category.toLowerCase();
@@ -16,7 +16,7 @@ export async function matchNGOs(db, {
   let ngoList = [];
   try {
     const { rows } = await db(
-      `SELECT * FROM ngos WHERE city = $1 OR city = 'Seattle' ORDER BY urgency_score DESC`,
+      `SELECT * FROM ngos WHERE city = $1 OR city = 'Bengaluru' ORDER BY urgency_score DESC`,
       [location]
     );
     ngoList = rows;
@@ -27,9 +27,9 @@ export async function matchNGOs(db, {
   // Fallback synthetic NGOs if database is empty or queries fail
   if (ngoList.length === 0) {
     ngoList = [
-      { name: "Tech Kids Foundation", description: "Provides refurbished devices to children in need", category_needs: ["electronics"], capacity_status: "open", city: "Seattle", distance_miles: 4.2, urgency_score: 95, beneficiary_type: "Children" },
-      { name: "Red Cross Seattle", description: "Disaster relief and shelter support", category_needs: ["apparel", "home"], capacity_status: "open", city: "Seattle", distance_miles: 3.5, urgency_score: 90, beneficiary_type: "Displaced Families" },
-      { name: "Green Earth Habitat", description: "Eco-friendly furniture and home redistribution", category_needs: ["home"], capacity_status: "medium", city: "Seattle", distance_miles: 2.1, urgency_score: 60, beneficiary_type: "Low-income Families" }
+      { name: "Tech Kids India", description: "Provides refurbished devices to children in need", category_needs: ["electronics"], capacity_status: "open", city: "Bengaluru", distance_miles: 4.2, urgency_score: 95, beneficiary_type: "Children" },
+      { name: "Goonj Bengaluru", description: "Disaster relief and clothing/home distribution", category_needs: ["apparel", "home"], capacity_status: "open", city: "Bengaluru", distance_miles: 3.5, urgency_score: 90, beneficiary_type: "Displaced Families" },
+      { name: "Seva Sadan Habitat", description: "Eco-friendly furniture and home redistribution", category_needs: ["home"], capacity_status: "medium", city: "Bengaluru", distance_miles: 2.1, urgency_score: 60, beneficiary_type: "Low-income Families" }
     ];
   }
 

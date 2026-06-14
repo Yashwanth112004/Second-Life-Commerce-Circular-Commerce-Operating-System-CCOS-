@@ -338,7 +338,7 @@ async function runAnalysisJob(ret, user) {
         const ngoRecommendations = await matchNGOs(query, {
             category: ret.category,
             condition: r.grade,
-            location: user.city || "Seattle",
+            location: user.city || "Bengaluru",
             fmv: Math.round(price.recommended_price * 0.6)
         });
 
@@ -670,7 +670,7 @@ router.post(
                 // Look up matching NGO
                 const { rows: ngoRows } = await c.query(
                     `SELECT id, beneficiary_type FROM ngos WHERE name = $1 LIMIT 1`,
-                    [ngoName || "Red Cross Seattle"]
+                    [ngoName || "Goonj Bengaluru"]
                 );
                 const ngoId = ngoRows[0] ? ngoRows[0].id : null;
                 const fmv = Math.round(price.recommended_price * 0.6);
@@ -681,9 +681,9 @@ router.post(
                 } = await c.query(
                     `INSERT INTO donations (order_id, donor_id, ngo_name, fair_market_value, tax_receipt_id, status, impact_stage, impact_detail, ngo_id, tax_benefit)
            VALUES ($1,$2,$3,$4,$5,'confirmed','received',$6,$7,$8) RETURNING *`,
-                    [ret.order_id, req.user.id, ngoName || "Red Cross Seattle", fmv, `TR-${Date.now()}`,
+                    [ret.order_id, req.user.id, ngoName || "Goonj Bengaluru", fmv, `TR-${Date.now()}`,
                         JSON.stringify({
-                            recipient: ngoName || "Red Cross Seattle",
+                            recipient: ngoName || "Goonj Bengaluru",
                             end_use: "community redistribution",
                             est_meals: Math.round(fmv * 3)
                         }),
@@ -708,7 +708,7 @@ router.post(
                 });
                 await c.query(`INSERT INTO product_passports (order_id, event_type, detail, actor) VALUES ($1,'donation',$2,'Second Life Commerce')`,
                     [ret.order_id, JSON.stringify({
-                        ngo: ngoName || "Red Cross Seattle"
+                        ngo: ngoName || "Goonj Bengaluru"
                     })]);
                 await c.query("UPDATE orders SET status='donated' WHERE id=$1", [ret.order_id]);
                 await c.query("UPDATE returns SET chosen_path='donate', status='completed' WHERE id=$1", [ret.id]);

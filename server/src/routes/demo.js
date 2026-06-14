@@ -64,11 +64,11 @@ router.post(
                 if (role === "seller") await c.query("INSERT INTO seller_metrics (seller_id) VALUES ($1)", [rows[0].id]);
                 return rows[0];
             };
-            const alex = await mkUser("alex@example.com", "Alex Rivera", "customer", "Seattle");
-            const sarah = await mkUser("sarah@example.com", "Sarah Chen", "customer", "Austin");
-            const jordan = await mkUser("jordan@example.com", "Jordan Lee", "seller", "Portland");
-            await mkUser("esg@example.com", "Enterprise ESG", "enterprise", "Seattle");
-            await mkUser("admin@example.com", "Platform Admin", "admin", "Seattle");
+            const alex = await mkUser("alex@example.com", "Aarav Sharma", "customer", "Bengaluru");
+            const sarah = await mkUser("sarah@example.com", "Ananya Patel", "customer", "Mumbai");
+            const jordan = await mkUser("jordan@example.com", "Rohan Mehta", "seller", "Pune");
+            await mkUser("esg@example.com", "Enterprise ESG India", "enterprise", "Bengaluru");
+            await mkUser("admin@example.com", "Platform Admin", "admin", "Bengaluru");
 
             // --- Orders for Alex (rich history) ---
             const alexOrders = [
@@ -98,7 +98,7 @@ router.post(
                 await c.query("INSERT INTO product_passports (order_id,event_type,detail,actor,created_at) VALUES ($1,'first_sale',$2,'Amazon',$3)",
                     [oid, JSON.stringify({
                         price,
-                        region: "US-WA"
+                        region: "IN-KA"
                     }), purchasedAt]);
                 await c.query("INSERT INTO ownership_history (order_id,owner_id,owner_label,acquired_at) VALUES ($1,$2,$3,$4)",
                     [oid, alex.id, alex.name, purchasedAt]);
@@ -137,7 +137,7 @@ router.post(
             })]);
             await c.query("INSERT INTO ownership_history (order_id,owner_id,owner_label) VALUES ($1,$2,$3)", [speakerId, sarah.id, sarah.name]);
             await c.query("INSERT INTO buyer_matches (order_id,buyer_id,buyer_label,location,distance_miles,match_score,conversion_probability,predicted_days_to_sale) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-                [speakerId, sarah.id, sarah.name, "South Congress, Austin", 4.2, 96, 0.92, 3]);
+                [speakerId, sarah.id, sarah.name, "Bandra, Mumbai", 4.2, 96, 0.92, 3]);
 
             // --- A completed donation (jacket) — drives donation impact demo ---
             const {
@@ -153,9 +153,9 @@ router.post(
             });
             const dgc = creditsForAction("donation", dCarbon.carbon_saved_kg);
             await c.query("INSERT INTO returns (order_id,user_id,reason_code,chosen_path,status) VALUES ($1,$2,'changed_mind','donate','completed')", [jacketId, alex.id]);
-            await c.query("INSERT INTO donations (order_id,donor_id,ngo_name,fair_market_value,tax_receipt_id,status,impact_stage,impact_detail) VALUES ($1,$2,$3,$4,$5,'confirmed','distributed',$6)",
-                [jacketId, alex.id, "Seattle Community Shelter", 78, `TR-${Date.now()}`, JSON.stringify({
-                    recipient: "Seattle Community Shelter",
+            await c.query("INSERT INTO donations (order_id, donor_id, ngo_name, fair_market_value, tax_receipt_id, status, impact_stage, impact_detail) VALUES ($1,$2,$3,$4,$5,'confirmed','distributed',$6)",
+                [jacketId, alex.id, "Goonj Bengaluru", 78, `TR-${Date.now()}`, JSON.stringify({
+                    recipient: "Goonj Bengaluru",
                     end_use: "Winter warmth for families",
                     est_people_helped: 2,
                     est_meals: 0
@@ -166,7 +166,7 @@ router.post(
             await c.query("INSERT INTO green_credit_transactions (user_id,delta,reason,action,balance_after) VALUES ($1,$2,'Donated Down Jacket','donation',(SELECT green_credits FROM wallets WHERE user_id=$1))", [alex.id, dgc]);
             await c.query("UPDATE orders SET status='donated' WHERE id=$1", [jacketId]);
             await c.query("INSERT INTO product_passports (order_id,event_type,detail,actor) VALUES ($1,'donation',$2,'Second Life Commerce')", [jacketId, JSON.stringify({
-                ngo: "Seattle Community Shelter",
+                ngo: "Goonj Bengaluru",
                 people_helped: 2
             })]);
 

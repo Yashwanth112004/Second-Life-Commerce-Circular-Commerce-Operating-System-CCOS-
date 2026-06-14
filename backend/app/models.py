@@ -37,7 +37,7 @@ class User(Base):
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
     name: Mapped[str] = mapped_column(String(120))
     email: Mapped[str] = mapped_column(String(180), unique=True)
-    city: Mapped[str] = mapped_column(String(120), default="Seattle")
+    city: Mapped[str] = mapped_column(String(120), default="Bengaluru")
     zip_code: Mapped[str] = mapped_column(String(12), default="98101")
     is_prime: Mapped[bool] = mapped_column(default=True)
     green_credits: Mapped[float] = mapped_column(Float, default=0.0)

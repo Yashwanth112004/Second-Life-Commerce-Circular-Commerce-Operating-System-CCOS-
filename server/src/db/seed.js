@@ -19,10 +19,10 @@ const PRODUCTS = [
 
 const NGOS = [
   // name, desc, needs, capacity, city, dist, urgency, beneficiary
-  ["Tech Kids Foundation", "Provides refurbished devices to children in need", ["electronics"], "open", "Seattle", 4.2, 95, "Children"],
-  ["Red Cross Seattle", "Disaster relief and clothing/home distribution", ["apparel", "home"], "open", "Seattle", 3.5, 90, "Displaced Families"],
-  ["Green Earth Habitat", "Eco-friendly furniture and home redistribution", ["home"], "medium", "Seattle", 2.1, 60, "Low-income Families"],
-  ["Austin Community Shelter", "Provides clothing and home essentials in Austin", ["apparel", "home"], "open", "Austin", 5.0, 85, "Homeless Individuals"],
+  ["Tech Kids India", "Provides refurbished devices to children in need", ["electronics"], "open", "Bengaluru", 4.2, 95, "Children"],
+  ["Goonj Bengaluru", "Disaster relief and clothing/home distribution", ["apparel", "home"], "open", "Bengaluru", 3.5, 90, "Displaced Families"],
+  ["Seva Sadan Habitat", "Eco-friendly furniture and home redistribution", ["home"], "medium", "Bengaluru", 2.1, 60, "Low-income Families"],
+  ["Mumbai Welfare Shelter", "Provides clothing and home essentials in Mumbai", ["apparel", "home"], "open", "Mumbai", 5.0, 85, "Homeless Individuals"],
 ];
 
 async function seed() {
@@ -56,11 +56,11 @@ async function seed() {
       return rows[0];
     };
 
-    const alex = await mkUser("alex@example.com", "Alex Rivera", "customer", "Seattle", "L", "medium", 85);
-    const jordan = await mkUser("jordan@example.com", "Jordan Lee", "seller", "Austin", "M", "low", 90);
-    const dana = await mkUser("dana@example.com", "Dana Cruz", "customer", "Seattle", "9", "high", 95);
-    await mkUser("esg@example.com", "Enterprise ESG", "enterprise", "Seattle", "M", "medium", 80);
-    await mkUser("admin@example.com", "Platform Admin", "admin", "Seattle", "M", "medium", 80);
+    const alex = await mkUser("alex@example.com", "Aarav Sharma", "customer", "Bengaluru", "L", "medium", 85);
+    const jordan = await mkUser("jordan@example.com", "Rohan Mehta", "seller", "Mumbai", "M", "low", 90);
+    const dana = await mkUser("dana@example.com", "Divya Patel", "customer", "Bengaluru", "9", "high", 95);
+    await mkUser("esg@example.com", "Enterprise ESG India", "enterprise", "Bengaluru", "M", "medium", 80);
+    await mkUser("admin@example.com", "Platform Admin", "admin", "Bengaluru", "M", "medium", 80);
 
     // NGOs
     for (const [name, desc, needs, capacity, city, dist, urgency, beneficiary] of NGOS) {

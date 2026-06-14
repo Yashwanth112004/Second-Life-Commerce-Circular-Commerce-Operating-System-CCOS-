@@ -5,7 +5,7 @@ import { useAuth } from "../auth.jsx";
 export default function Register() {
   const { register } = useAuth();
   const nav = useNavigate();
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "customer", city: "Seattle" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "customer", city: "Bengaluru" });
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 

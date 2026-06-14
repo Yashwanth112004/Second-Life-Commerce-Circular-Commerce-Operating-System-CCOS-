@@ -101,7 +101,7 @@ router.post(
       grade: "B",
       ageMonths: o.age_months,
       category: o.category,
-      region: req.user.city || "Seattle"
+      region: req.user.city || "Bengaluru"
     });
 
     // Step 5 (Listing Auto-Gen): Generate Listing Description
@@ -172,7 +172,7 @@ router.post(
 
     await query(
       `INSERT INTO notifications (user_id, kind, title, body) VALUES ($1,'ara','Agent listed an item',$2)`,
-      [req.user.id, `${o.title} is now listed at $${priceRec.recommended_price} with ${buyers.matches.length} buyer matches.`]
+      [req.user.id, `${o.title} is now listed at ₹${priceRec.recommended_price} with ${buyers.matches.length} buyer matches.`]
     );
 
     res.status(201).json({
@@ -235,7 +235,7 @@ export async function autoRepriceListings(db) {
         await db(
           `INSERT INTO notifications (user_id, kind, title, body)
            VALUES ($1, 'ara', 'Item repriced', $2)`,
-          [listing.seller_id, `Your ${listing.title} listing price was updated to $${targetPrice} according to its markdown schedule.`]
+          [listing.seller_id, `Your ${listing.title} listing price was updated to ₹${targetPrice} according to its markdown schedule.`]
         );
       }
     }
@@ -296,7 +296,7 @@ export async function runAutonomousAgentSweep(db, user) {
           grade: "B",
           ageMonths: o.age_months,
           category: o.category,
-          region: user.city || "Seattle"
+          region: user.city || "Bengaluru"
         });
 
         // Generate Listing Copy
@@ -367,7 +367,7 @@ export async function runAutonomousAgentSweep(db, user) {
         // Notify user of autonomous listing
         await db(
           `INSERT INTO notifications (user_id, kind, title, body) VALUES ($1,'ara','Agent listed an item',$2)`,
-          [user.id, `Your ${o.title} has been autonomously listed for $${priceRec.recommended_price} with ${buyers.matches.length} buyer matches.`]
+          [user.id, `Your ${o.title} has been autonomously listed for ₹${priceRec.recommended_price} with ${buyers.matches.length} buyer matches.`]
         );
       } catch (err) {
         console.error(`[ARA Sweep] Autonomously listing ${o.title} failed:`, err.message);
@@ -388,11 +388,11 @@ export async function runAutonomousAgentSweep(db, user) {
         const ngoMatches = await matchNGOs(db, {
           category: o.category,
           condition: "B",
-          location: user.city || "Seattle",
+          location: user.city || "Bengaluru",
           fmv: o.msrp * 0.6
         });
         const topNgo = ngoMatches[0];
-        const ngoName = topNgo ? topNgo.name : "Red Cross Seattle";
+        const ngoName = topNgo ? topNgo.name : "Goonj Bengaluru";
         const ngoId = topNgo ? topNgo.ngo_id : null;
 
         const priceRec = recommendPrice({
@@ -447,7 +447,7 @@ export async function runAutonomousAgentSweep(db, user) {
 
         await db(
           `INSERT INTO notifications (user_id, kind, title, body) VALUES ($1,'ara','Agent donated an item',$2)`,
-          [user.id, `Your ${o.title} has been autonomously donated to ${ngoName} (Tax Benefit: $${taxBenefit}).`]
+          [user.id, `Your ${o.title} has been autonomously donated to ${ngoName} (Tax Benefit: ₹${taxBenefit}).`]
         );
       } catch (err) {
         console.error(`[ARA Sweep] Autonomously donating ${o.title} failed:`, err.message);

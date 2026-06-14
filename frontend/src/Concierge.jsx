@@ -54,7 +54,7 @@ export default function Concierge() {
           </div>
           {(s.actionable ?? 0) > 0 && (
             <span className="hidden shrink-0 items-center gap-2 sm:flex">
-              <span className="pill bg-leaf-500/20 text-leaf-400">${s.total_value_recovery_usd ?? 0}</span>
+              <span className="pill bg-leaf-500/20 text-leaf-400">₹{s.total_value_recovery_usd ?? 0}</span>
               <span className="pill bg-sky-500/15 text-sky-300">{s.total_carbon_opportunity_kg ?? 0} kg CO₂</span>
             </span>
           )}
@@ -66,7 +66,7 @@ export default function Concierge() {
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
               <div className="pb-4">
                 <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <MiniStat label="Value recovery" value={`$${s.total_value_recovery_usd ?? 0}`} />
+                  <MiniStat label="Value recovery" value={`₹${s.total_value_recovery_usd ?? 0}`} />
                   <MiniStat label="Carbon opportunity" value={`${s.total_carbon_opportunity_kg ?? 0} kg`} />
                   <MiniStat label="Green Credits" value={`+${s.total_gc_opportunity ?? 0}`} />
                   <MiniStat label="Circular Score" value={`+${s.total_circular_score_opportunity ?? 0}`} />
@@ -90,7 +90,7 @@ export default function Concierge() {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400">+${r.impact?.value_recovery_usd ?? 0} · {r.impact?.carbon_opportunity_kg ?? 0}kg · +{r.impact?.green_credits_opportunity ?? 0}GC</span>
+                            <span className="text-xs text-slate-400">+₹{r.impact?.value_recovery_usd ?? 0} · {r.impact?.carbon_opportunity_kg ?? 0}kg · +{r.impact?.green_credits_opportunity ?? 0}GC</span>
                             <button onClick={() => setExpanded(expanded === r.order_id ? null : r.order_id)} className="text-xs text-leaf-400">Why?</button>
                             {r.action === "sell_now" && (
                               <button onClick={() => listIt.mutate(r.order_id)} disabled={listIt.isPending} className="btn-primary px-3 py-1 text-xs">
@@ -112,7 +112,7 @@ export default function Concierge() {
                                 ))}
                               </div>
                               <div className="mt-2 text-xs text-slate-500">
-                                Twin: ${r.twin?.current_value ?? 0} now → ${r.twin?.forecast?.m6 ?? 0} in 6mo · best window: {r.twin?.best_resale_window ?? ""} · CES {r.impact?.ces_score ?? 0}/100
+                                Twin: ₹{r.twin?.current_value ?? 0} now → ₹{r.twin?.forecast?.m6 ?? 0} in 6mo · best window: {r.twin?.best_resale_window ?? ""} · CES {r.impact?.ces_score ?? 0}/100
                               </div>
                             </motion.div>
                           )}
@@ -123,7 +123,7 @@ export default function Concierge() {
                 )}
                 {listIt.isSuccess && listIt.data && (
                   <div className="mt-2 rounded-lg bg-leaf-500/10 p-2 text-xs text-leaf-300">
-                    ✓ Agent listed "{listIt.data.listing?.title}" at ${listIt.data.listing?.price} with {listIt.data.buyer_matches?.matches?.length ?? 0} buyer matches. <Link to="/agent" className="underline">View agent →</Link>
+                    ✓ Agent listed "{listIt.data.listing?.title}" at ₹{listIt.data.listing?.price} with {listIt.data.buyer_matches?.matches?.length ?? 0} buyer matches. <Link to="/agent" className="underline">View agent →</Link>
                   </div>
                 )}
               </div>

@@ -160,8 +160,8 @@ export default function Marketplace() {
                       <GradeBadge grade={l.condition_grade} />
                     </div>
                     <div className="mt-3 flex items-baseline gap-2">
-                      <span className="text-2xl font-extrabold text-leaf-400">${l.price ?? 0}</span>
-                      <span className="text-sm text-slate-500 line-through">${l.msrp ?? 0}</span>
+                      <span className="text-2xl font-extrabold text-leaf-400">₹{l.price ?? 0}</span>
+                      <span className="text-sm text-slate-500 line-through">₹{l.msrp ?? 0}</span>
                       <span className="pill bg-leaf-500/20 text-leaf-400">−{l.savings_pct ?? 0}%</span>
                     </div>
 
@@ -234,9 +234,9 @@ export default function Marketplace() {
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-lg text-white truncate">{selectedListing.title}</div>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-xl font-black text-leaf-400">${selectedListing.price}</span>
+                    <span className="text-xl font-black text-leaf-400">₹{selectedListing.price}</span>
                     {selectedListing.msrp && (
-                      <span className="text-sm text-slate-500 line-through">${selectedListing.msrp}</span>
+                      <span className="text-sm text-slate-500 line-through">₹{selectedListing.msrp}</span>
                     )}
                     <span className="pill py-0.5 px-2.5 bg-leaf-500/10 text-leaf-400 border border-leaf-500/20 text-[10px] rounded-full uppercase tracking-wider font-extrabold">
                       Size {selectedListing.size || "M"}

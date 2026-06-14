@@ -59,8 +59,8 @@ def seed() -> None:
 
         # Demo customer
         user = User(
-            name="Alex Rivera", email="alex@example.com",
-            city="Seattle", zip_code="98101", is_prime=True,
+            name="Aarav Sharma", email="alex@example.com",
+            city="Bengaluru", zip_code="560001", is_prime=True,
             green_credits=12.0, carbon_saved_kg=12.0,
         )
         db.add(user)
@@ -98,14 +98,14 @@ def seed() -> None:
             ))
             db.add(PassportEvent(
                 item_id=item.id, event_type="first_sale", actor="Amazon",
-                detail={"price": price, "region": "US-WA"},
+                detail={"price": price, "region": "IN-KA"},
                 created_at=item.purchased_at,
             ))
 
         # A few existing marketplace listings from other sellers (for the marketplace view).
         seller = User(
-            name="Jordan Lee", email="jordan@example.com",
-            city="Austin", zip_code="78701", is_prime=True,
+            name="Rohan Mehta", email="jordan@example.com",
+            city="Mumbai", zip_code="400001", is_prime=True,
             green_credits=340.0, carbon_saved_kg=340.0,
         )
         db.add(seller)

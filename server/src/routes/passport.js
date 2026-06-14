@@ -175,7 +175,7 @@ router.get(
             category: o.category,
             price: twin.current_value,
             sellerId: o.user_id,
-            sellerCity: o.city || "Seattle"
+            sellerCity: o.city || "Bengaluru"
         });
 
         res.json({

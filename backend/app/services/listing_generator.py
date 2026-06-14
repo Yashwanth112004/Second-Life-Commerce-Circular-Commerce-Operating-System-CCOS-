@@ -59,7 +59,7 @@ def generate_listing(
         f"AI-inspected and graded {grade} ({grade_label}) by Second Life Commerce. "
         f"Every Certified Preloved item ships with our Second Life Guarantee: if it "
         f"doesn't match the AI condition report, you get a full refund — no questions. "
-        f"Buy it for ${price:.0f} and give a great product a second life."
+        f"Buy it for ₹{price:.0f} and give a great product a second life."
     )
 
     highlights = [

@@ -141,7 +141,7 @@ export default function ReturnWizard() {
                 <div className="min-w-0">
                   <div className="font-semibold text-white">{o.product?.title}</div>
                   <div className="text-xs text-slate-500">{o.order_number}</div>
-                  <div className="text-sm text-slate-400">{o.product?.brand} · paid ${o.purchase_price} · est. now ${o.estimated_value}</div>
+                  <div className="text-sm text-slate-400">{o.product?.brand} · paid ₹{o.purchase_price} · est. now ₹{o.estimated_value}</div>
                 </div>
               </button>
             ))}
@@ -416,7 +416,7 @@ function AnalysisOutcome({ analysis, selectedNgo, setSelectedNgo, onDecide, onAd
                 <span>Resell As-Is</span>
                 {recommended === "resell" && <span className="text-leaf-400 font-bold">Pick</span>}
               </div>
-              <div className="mt-2 text-xl font-extrabold text-leaf-400">${r.rde.matrix.resell_as_is.profit}</div>
+              <div className="mt-2 text-xl font-extrabold text-leaf-400">₹{r.rde.matrix.resell_as_is.profit}</div>
               <div className="text-[11px] text-slate-500">Net Profit</div>
               <div className="mt-2 space-y-0.5 text-xs text-slate-400">
                 <div>🌳 {r.rde.matrix.resell_as_is.carbon_savings} kg CO₂ saved</div>
@@ -429,7 +429,7 @@ function AnalysisOutcome({ analysis, selectedNgo, setSelectedNgo, onDecide, onAd
                 <span>Refurbish & Resell</span>
                 {recommended === "repair" && <span className="text-leaf-400 font-bold">Pick</span>}
               </div>
-              <div className="mt-2 text-xl font-extrabold text-leaf-400">${r.rde.matrix.refurbish_resell.profit}</div>
+              <div className="mt-2 text-xl font-extrabold text-leaf-400">₹{r.rde.matrix.refurbish_resell.profit}</div>
               <div className="text-[11px] text-slate-500">Net Profit</div>
               <div className="mt-2 space-y-0.5 text-xs text-slate-400">
                 <div>🌳 {r.rde.matrix.refurbish_resell.carbon_savings} kg CO₂ saved</div>
@@ -442,7 +442,7 @@ function AnalysisOutcome({ analysis, selectedNgo, setSelectedNgo, onDecide, onAd
                 <span>Donate</span>
                 {recommended === "donate" && <span className="text-leaf-400 font-bold">Pick</span>}
               </div>
-              <div className="mt-2 text-xl font-extrabold text-sky-400">FMV ${r.rde.matrix.donate.tax_benefit}</div>
+              <div className="mt-2 text-xl font-extrabold text-sky-400">FMV ₹{r.rde.matrix.donate.tax_benefit}</div>
               <div className="text-[11px] text-slate-500">Tax Benefit</div>
               <div className="mt-2 space-y-0.5 text-xs text-slate-400">
                 <div>🌟 {r.rde.matrix.donate.impact_score}/99 Impact score</div>
@@ -482,7 +482,7 @@ function AnalysisOutcome({ analysis, selectedNgo, setSelectedNgo, onDecide, onAd
               <select value={selectedNgo} onChange={(e) => setSelectedNgo(e.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-ink-950 px-3 py-2 text-white outline-none focus:border-leaf-500 text-sm">
                 {r.ngo_recommendations.map((ngo) => (
-                  <option key={ngo.name} value={ngo.name}>{ngo.name} (dist: {ngo.distance_miles}mi, impact: {ngo.impact_score}%)</option>
+                  <option key={ngo.name} value={ngo.name}>{ngo.name} (dist: {ngo.distance_miles}km, impact: {ngo.impact_score}%)</option>
                 ))}
               </select>
             </div>
@@ -495,7 +495,7 @@ function AnalysisOutcome({ analysis, selectedNgo, setSelectedNgo, onDecide, onAd
                     <div className="text-xs font-semibold text-slate-300">Targeted Impact for {matched.name}:</div>
                     <div className="text-xs text-slate-400 italic mt-1">"{matched.reason}"</div>
                     <div className="text-[11px] text-slate-500 mt-1 flex justify-between border-t border-white/5 pt-1">
-                      <span>Distance: {matched.distance_miles} mi</span>
+                      <span>Distance: {matched.distance_miles} km</span>
                       <span>Beneficiary: {matched.beneficiary_type}</span>
                     </div>
                   </>
@@ -517,7 +517,7 @@ function AnalysisOutcome({ analysis, selectedNgo, setSelectedNgo, onDecide, onAd
                   {o.path === recommended && <span className="pill bg-leaf-500/20 text-leaf-400">AI pick</span>}
                 </div>
                 <div className="mt-2 text-2xl font-extrabold text-leaf-400">
-                  {o.path === "donate" ? `FMV $${o.tax_receipt_value}` : `$${o.money}`}
+                  {o.path === "donate" ? `FMV ₹${o.tax_receipt_value}` : `₹${o.money}`}
                 </div>
                 <ul className="mt-2 space-y-0.5 text-xs text-slate-400">
                   <li>+{o.green_credits} Green Credits</li>
@@ -590,7 +590,7 @@ function ResultView({ order, returnId, result, onReset }) {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="font-bold text-white">{m.buyer_label}</span>
-                    <span className="text-xs text-slate-500"> &bull; {m.location} &bull; {m.distance_miles} mi</span>
+                    <span className="text-xs text-slate-500"> &bull; {m.location} &bull; {m.distance_miles} km</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="pill bg-leaf-500/20 text-leaf-400">{m.match_score}% Match</span>
@@ -652,10 +652,10 @@ function ResultView({ order, returnId, result, onReset }) {
       )}
       {result.donation && (
         <div className="card"><h3 className="text-lg font-bold text-white">🎁 Donated</h3>
-          <p className="text-sm text-slate-400">To {result.donation.ngo_name} · tax receipt {result.donation.tax_receipt_id} · FMV ${result.donation.fair_market_value} · tax benefit saved: ${result.donation.tax_benefit}</p></div>
+          <p className="text-sm text-slate-400">To {result.donation.ngo_name} · tax receipt {result.donation.tax_receipt_id} · FMV ₹{result.donation.fair_market_value} · tax benefit saved: ₹{result.donation.tax_benefit}</p></div>
       )}
       {typeof result.refund_amount === "number" && (
-        <div className="card"><h3 className="text-lg font-bold text-white">💸 Refund issued: ${result.refund_amount}</h3></div>
+        <div className="card"><h3 className="text-lg font-bold text-white">💸 Refund issued: ₹{result.refund_amount}</h3></div>
       )}
       {result.path === "repair" && (
         <RefurbishInstructionsCard returnId={returnId} />

@@ -28,7 +28,7 @@ export function recommendPrice({
   monthlyDepreciation = 0.015,
   demandScore = null,
   brandValue = 85,
-  region = "Seattle",
+  region = "Bengaluru",
   marketTrends = "stable"
 }) {
   const itemMsrp = Number(msrp || 100);
@@ -84,7 +84,7 @@ export const PricingEngineService = {
     ageMonths,
     category,
     brandValue = 85,
-    region = "Seattle",
+    region = "Bengaluru",
     marketTrends = "stable"
   }) {
     const started = Date.now();

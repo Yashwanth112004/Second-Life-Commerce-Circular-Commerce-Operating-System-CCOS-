@@ -38,9 +38,9 @@ export default function Wallet() {
       qc.invalidateQueries({ queryKey: ["walletHistory"] });
       setTradeAmount("");
       if (tradeAction === "sell") {
-        setSuccessMsg(`Successfully swapped green credits! Received $${data.usdEarned.toFixed(2)} USD Tokens.`);
+        setSuccessMsg(`Successfully swapped green credits! Received ₹${data.usdEarned.toFixed(2)} INR Tokens.`);
       } else {
-        setSuccessMsg(`Successfully purchased green credits! Deducted $${data.usdCost.toFixed(2)} USD Tokens.`);
+        setSuccessMsg(`Successfully purchased green credits! Deducted ₹${data.usdCost.toFixed(2)} INR Tokens.`);
       }
     },
     onError: (err) => {
@@ -73,8 +73,8 @@ export default function Wallet() {
       <h1 className="text-3xl font-extrabold text-white">Circular Wallet & Impact</h1>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Stat label="Green Credits" value={`${w.green_credits ?? 0} GC`} sub={`Rate: $${(w.exchange_rate || 0).toFixed(4)}/GC`} accent="text-leaf-400" />
-        <Stat label="USD Token Balance" value={`$${(w.usd_balance || 0).toFixed(2)}`} sub={`Total cash value: $${(w.cash_value_usd || 0).toFixed(2)}`} accent="text-amber-400" />
+        <Stat label="Green Credits" value={`${w.green_credits ?? 0} GC`} sub={`Rate: ₹${(w.exchange_rate || 0).toFixed(4)}/GC`} accent="text-leaf-400" />
+        <Stat label="INR Token Balance" value={`₹${(w.usd_balance || 0).toFixed(2)}`} sub={`Total cash value: ₹${(w.cash_value_usd || 0).toFixed(2)}`} accent="text-amber-400" />
         <Stat label="CO₂ saved" value={`${w.carbon_saved_kg ?? 0} kg`} sub={equivalents.driving ?? ""} accent="text-leaf-400" />
         <Stat label="Level" value={w.level ?? "1"} sub={next.name ? `${next.gcToNext ?? 0} GC to ${next.name}` : "Max level"} />
       </div>
@@ -87,7 +87,7 @@ export default function Wallet() {
             <span>💱</span> Green Credit DeFi Token Swap
           </h3>
           <p className="text-xs text-slate-400 mb-4">
-            Swap your verified Green Credit tokens for tradeable USD Stable-Tokens, or buy more credits. Pricing is algorithmically backed by actual verified carbon offsets.
+            Swap your verified Green Credit tokens for tradeable INR Stable-Tokens, or buy more credits. Pricing is algorithmically backed by actual verified carbon offsets.
           </p>
           
           <div className="space-y-4">
@@ -97,7 +97,7 @@ export default function Wallet() {
                 onClick={() => { setTradeAction("sell"); setErrorMsg(null); setSuccessMsg(null); }}
                 className={`flex-1 py-1.5 text-center text-xs font-semibold rounded-md transition ${tradeAction === "sell" ? "bg-leaf-500 text-ink-950" : "text-slate-400 hover:text-white"}`}
               >
-                Swap GC for USD (Sell)
+                Swap GC for INR (Sell)
               </button>
               <button 
                 onClick={() => { setTradeAction("buy"); setErrorMsg(null); setSuccessMsg(null); }}
@@ -130,16 +130,16 @@ export default function Wallet() {
             <div className="p-3 rounded-lg bg-white/5 border border-white/5 space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-slate-400">Algorithmic Rate:</span>
-                <span className="text-leaf-400 font-medium">${(w.exchange_rate || 0).toFixed(4)} USD / GC</span>
+                <span className="text-leaf-400 font-medium">₹{(w.exchange_rate || 0).toFixed(4)} INR / GC</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-slate-400">Total Value:</span>
-                <span className="text-white font-bold">${(Number(tradeAmount || 0) * (w.exchange_rate || 0)).toFixed(2)} USD</span>
+                <span className="text-white font-bold">₹{(Number(tradeAmount || 0) * (w.exchange_rate || 0)).toFixed(2)} INR</span>
               </div>
               {tradeAction === "buy" && (
                 <div className="flex justify-between text-[10px] text-slate-500">
-                  <span>Available USD Tokens:</span>
-                  <span>${(w.usd_balance || 0).toFixed(2)}</span>
+                  <span>Available INR Tokens:</span>
+                  <span>₹{(w.usd_balance || 0).toFixed(2)}</span>
                 </div>
               )}
             </div>
@@ -153,7 +153,7 @@ export default function Wallet() {
               disabled={tradeMut.isPending || !tradeAmount || Number(tradeAmount) <= 0}
               className="w-full btn-primary py-2 text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {tradeMut.isPending ? "Executing Swap..." : tradeAction === "sell" ? "Swap GC for USD Tokens" : "Confirm GC Purchase"}
+              {tradeMut.isPending ? "Executing Swap..." : tradeAction === "sell" ? "Swap GC for INR Tokens" : "Confirm GC Purchase"}
             </button>
           </div>
         </div>

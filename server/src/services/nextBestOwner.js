@@ -1,12 +1,14 @@
 import crypto from "node:crypto";
 
 const NEIGHBORHOODS = {
-  Seattle: ["Capitol Hill", "Ballard", "Fremont", "Queen Anne", "Green Lake", "Pioneer Square"],
-  Austin: ["South Congress", "Mueller", "Hyde Park", "Zilker", "Downtown", "West Lake Hills"],
-  Chicago: ["Wicker Park", "Logan Square", "Lincoln Park", "Pilsen", "Loop", "River North"],
+  Bengaluru: ["Indiranagar", "Koramangala", "HSR Layout", "Whitefield", "Jayanagar", "Malleswaram"],
+  Mumbai: ["Bandra", "Andheri", "Colaba", "Juhu", "Powai", "Worli"],
+  Delhi: ["Connaught Place", "Saket", "Vasant Kunj", "Karol Bagh", "Dwarka", "Greater Kailash"],
+  Hyderabad: ["Gachibowli", "Jubilee Hills", "Banjara Hills", "Madhapur", "Kondapur", "Begumpet"],
+  Pune: ["Koregaon Park", "Kothrud", "Aundh", "Viman Nagar", "Hinjawadi", "Baner"],
 };
 
-const FALLBACK_NAMES = ["Maria", "James", "Elena", "Dev", "Aisha", "Liam", "Priya", "Sofia", "Marcus", "Chloe", "Arjun", "Zara"];
+const FALLBACK_NAMES = ["Aarav", "Kabir", "Rohan", "Dev", "Aisha", "Vikram", "Priya", "Ananya", "Diya", "Pooja", "Arjun", "Yash", "Rahul", "Sai", "Priyanka"];
 
 function seedInt(str) {
   return parseInt(crypto.createHash("sha256").update(str).digest("hex").slice(0, 8), 16);

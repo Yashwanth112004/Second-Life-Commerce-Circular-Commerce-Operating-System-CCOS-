@@ -11,11 +11,13 @@ import hashlib
 import math
 from dataclasses import dataclass, field
 
-_FIRST = ["Maria", "James", "Elena", "Dev", "Aisha", "Liam", "Noah", "Priya", "Sofia", "Kenji"]
+_FIRST = ["Aarav", "Kabir", "Rohan", "Dev", "Aisha", "Vikram", "Priya", "Ananya", "Diya", "Pooja", "Arjun", "Yash", "Rahul", "Sai", "Priyanka"]
 _NEIGHBORHOODS = {
-    "Seattle": ["Capitol Hill", "Ballard", "Fremont", "Queen Anne"],
-    "Austin": ["South Congress", "Mueller", "Hyde Park", "Zilker"],
-    "Chicago": ["Wicker Park", "Logan Square", "Lincoln Park", "Pilsen"],
+    "Bengaluru": ["Indiranagar", "Koramangala", "HSR Layout", "Whitefield", "Jayanagar", "Malleswaram"],
+    "Mumbai": ["Bandra", "Andheri", "Colaba", "Juhu", "Powai", "Worli"],
+    "Delhi": ["Connaught Place", "Saket", "Vasant Kunj", "Karol Bagh", "Dwarka", "Greater Kailash"],
+    "Hyderabad": ["Gachibowli", "Jubilee Hills", "Banjara Hills", "Madhapur", "Kondapur", "Begumpet"],
+    "Pune": ["Koregaon Park", "Kothrud", "Aundh", "Viman Nagar", "Hinjawadi", "Baner"],
     "default": ["Downtown", "Midtown", "Riverside", "Old Town"],
 }
 
@@ -170,14 +172,14 @@ def find_buyers(
         days = max(2, int(distance / 6) + i + 1)
         budget_delta = (salt % 25) - 8
         if budget_delta >= 0:
-            price_fit = f"budget ~${price + budget_delta:.0f} (above ask)"
+            price_fit = f"budget ~₹{price + budget_delta:.0f} (above ask)"
         else:
-            price_fit = f"budget ~${price + budget_delta:.0f} (at ask)"
+            price_fit = f"budget ~₹{price + budget_delta:.0f} (at ask)"
 
         msg = (
             f"Hi {name} — a Certified Preloved {product_title} just became available "
-            f"{distance:.0f} mi from you in {hood}, matching your saved search. "
-            f"Listed at ${price:.0f}."
+            f"{distance:.0f} km from you in {hood}, matching your saved search. "
+            f"Listed at ₹{price:.0f}."
         )
 
         bandit = run_contextual_bandit(price_sens, sust_score, affinity, salt)

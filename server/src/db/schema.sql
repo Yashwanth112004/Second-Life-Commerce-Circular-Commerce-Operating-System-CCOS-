@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   name            TEXT NOT NULL,
   role            TEXT NOT NULL DEFAULT 'customer'
                     CHECK (role IN ('customer','seller','enterprise','admin')),
-  city            TEXT DEFAULT 'Seattle',
+  city            TEXT DEFAULT 'Bengaluru',
   zip_code        TEXT DEFAULT '98101',
   is_prime        BOOLEAN DEFAULT TRUE,
   ara_enabled     BOOLEAN NOT NULL DEFAULT FALSE,
@@ -369,7 +369,7 @@ CREATE TABLE IF NOT EXISTS ngos (
   description     TEXT DEFAULT '',
   category_needs  JSONB DEFAULT '[]',
   capacity_status TEXT DEFAULT 'open',
-  city            TEXT DEFAULT 'Seattle',
+  city            TEXT DEFAULT 'Bengaluru',
   distance_miles  NUMERIC(8,1),
   urgency_score   INT DEFAULT 50,
   beneficiary_type TEXT DEFAULT 'General',

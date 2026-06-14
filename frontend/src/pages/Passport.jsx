@@ -27,7 +27,7 @@ export default function Passport() {
         <img src={p.image_url} alt="" className="h-24 w-24 rounded-xl object-cover" onError={(e) => (e.currentTarget.style.visibility = "hidden")} />
         <div className="flex-1">
           <h1 className="text-2xl font-extrabold text-white">{p.brand ?? ""} {p.title ?? ""}</h1>
-          <div className="mt-1 text-sm text-slate-400">{p.category ?? ""} · MSRP ${p.msrp ?? 0} · eco score {p.eco_score ?? 0}/100</div>
+          <div className="mt-1 text-sm text-slate-400">{p.category ?? ""} · MSRP ₹{p.msrp ?? 0} · eco score {p.eco_score ?? 0}/100</div>
           <div className="mt-2 flex flex-wrap items-center gap-3">
             {d.current_grade && <GradeBadge grade={d.current_grade} label={d.grade_label} />}
             <span className="text-sm text-slate-400">embedded carbon {p.embedded_carbon_kg ?? 0} kg CO₂</span>
@@ -77,14 +77,14 @@ export default function Passport() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff14" />
                 <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} tickFormatter={(m) => `${m}mo`} />
                 <YAxis stroke="#94a3b8" fontSize={11} />
-                <Tooltip contentStyle={tip} formatter={(v) => [`$${v}`, "value"]} />
+                <Tooltip contentStyle={tip} formatter={(v) => [`₹${v}`, "value"]} />
                 <Line type="monotone" dataKey="value" stroke="#22c55e" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
             <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
-              <div className="rounded bg-white/5 p-2"><div className="font-bold text-white">${d.twin.current_value ?? 0}</div><div className="text-xs text-slate-400">now</div></div>
-              <div className="rounded bg-white/5 p-2"><div className="font-bold text-white">${d.twin.forecast?.m6 ?? 0}</div><div className="text-xs text-slate-400">+6 mo</div></div>
-              <div className="rounded bg-white/5 p-2"><div className="font-bold text-white">${d.twin.forecast?.m12 ?? 0}</div><div className="text-xs text-slate-400">+12 mo</div></div>
+              <div className="rounded bg-white/5 p-2"><div className="font-bold text-white">₹{d.twin.current_value ?? 0}</div><div className="text-xs text-slate-400">now</div></div>
+              <div className="rounded bg-white/5 p-2"><div className="font-bold text-white">₹{d.twin.forecast?.m6 ?? 0}</div><div className="text-xs text-slate-400">+6 mo</div></div>
+              <div className="rounded bg-white/5 p-2"><div className="font-bold text-white">₹{d.twin.forecast?.m12 ?? 0}</div><div className="text-xs text-slate-400">+12 mo</div></div>
             </div>
           </div>
         )}
@@ -102,7 +102,7 @@ export default function Passport() {
               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff14" />
               <XAxis dataKey="label" stroke="#94a3b8" fontSize={10} />
               <YAxis stroke="#94a3b8" fontSize={11} />
-              <Tooltip contentStyle={tip} formatter={(v) => [`$${v}`, "value"]} />
+              <Tooltip contentStyle={tip} formatter={(v) => [`₹${v}`, "value"]} />
               <Area type="monotone" dataKey="value" stroke="#38bdf8" fill="url(#vh)" />
             </AreaChart>
           </ResponsiveContainer>
@@ -142,7 +142,7 @@ export default function Passport() {
                     <span className="font-bold text-white text-sm">{m.buyer_label}</span>
                     <span className="pill text-[10px] bg-leaf-500/20 text-leaf-400 px-1.5 py-0.5 rounded-full">{m.match_score}% Match</span>
                   </div>
-                  <div className="text-[11px] text-slate-400">📍 {m.location} · {m.distance_miles} miles</div>
+                  <div className="text-[11px] text-slate-400">📍 {m.location} · {m.distance_miles} km</div>
                   <div className="text-xs text-slate-300 italic bg-white/[0.01] rounded-lg p-2 border border-white/5 leading-relaxed">
                     "{m.outreachSuggestion}"
                   </div>

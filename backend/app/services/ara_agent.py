@@ -111,7 +111,7 @@ def scan_inventory(db: Session, user: User, *, min_price: float = 30.0, min_age_
 
     headline = (
         f"I found {len(candidates)} items in your purchase history with an estimated "
-        f"total resale value of ${total_value:,.0f}. Want me to start selling?"
+        f"total resale value of ₹{total_value:,.0f}. Want me to start selling?"
     )
 
     return ARAPlan(

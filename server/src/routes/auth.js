@@ -85,7 +85,7 @@ router.post(
                 rows
             } = await c.query(
                 `INSERT INTO users (email, password_hash, name, role, city)
-         VALUES ($1,$2,$3,$4,COALESCE($5,'Seattle')) RETURNING *`,
+         VALUES ($1,$2,$3,$4,COALESCE($5,'Bengaluru')) RETURNING *`,
                 [email, await hashPassword(password), name, role, city]
             );
             const u = rows[0];

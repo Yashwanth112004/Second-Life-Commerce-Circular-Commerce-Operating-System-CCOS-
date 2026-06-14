@@ -73,7 +73,7 @@ function CommandCenter() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Stat label="Owned products" value={d.owned_products ?? 0} sub={`$${d.owned_value ?? 0} value`} />
+        <Stat label="Owned products" value={d.owned_products ?? 0} sub={`₹${d.owned_value ?? 0} value`} />
         <Stat label="Green Credits" value={`${wallet.green_credits ?? 0} GC`} accent="text-leaf-400" />
         <Stat label="CO₂ saved" value={`${wallet.carbon_saved_kg ?? 0} kg`} accent="text-leaf-400" />
         <Stat label="Returns resolved" value={activity.returns_resolved ?? 0} sub={`${activity.circular_actions ?? 0} circular actions`} />
@@ -101,7 +101,7 @@ function CommandCenter() {
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold text-white">{o.product?.title}</div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-slate-400">est ${o.estimated_value ?? 0} · {o.status ?? ""}</span>
+                    <span className="text-xs text-slate-400">est ₹{o.estimated_value ?? 0} · {o.status ?? ""}</span>
                     {eolOrderIds.has(o.id) && (
                       <span className="pill text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/20 animate-pulse">⚠️ EOL Alert</span>
                     )}
@@ -129,7 +129,7 @@ function SellerDash() {
       <div className="grid gap-4 md:grid-cols-4">
         <Stat label="Total listings" value={metrics.total_listings ?? 0} />
         <Stat label="Sold" value={metrics.total_sold ?? 0} />
-        <Stat label="Revenue" value={`$${metrics.revenue ?? 0}`} accent="text-leaf-400" />
+        <Stat label="Revenue" value={`₹${metrics.revenue ?? 0}`} accent="text-leaf-400" />
         <Stat label="Circular score" value={metrics.circular_score ?? 0} />
       </div>
       <div className="card">
@@ -176,7 +176,7 @@ function EnterpriseDash({ isAdmin }) {
   return (
     <>
       <div className="grid gap-4 md:grid-cols-4">
-        <Stat label="Circular GMV" value={`$${d.circular_gmv ?? 0}`} accent="text-leaf-400" />
+        <Stat label="Circular GMV" value={`₹${d.circular_gmv ?? 0}`} accent="text-leaf-400" />
         <Stat label="CO₂ saved" value={`${esg.carbon_saved_kg ?? 0} kg`} accent="text-leaf-400" />
         <Stat label="Waste diverted" value={`${esg.waste_diverted_kg ?? 0} kg`} />
         <Stat label="Diversion rate" value={`${d.diversion_rate_pct ?? 0}%`} sub={`${d.circular_returns ?? 0}/${d.total_returns ?? 0} returns`} />
@@ -196,11 +196,11 @@ function EnterpriseDash({ isAdmin }) {
               <div className="text-[10px] text-slate-400 uppercase tracking-wider">People Impacted</div>
             </div>
             <div className="rounded-lg bg-white/5 p-3 text-center">
-              <div className="text-xl font-bold text-leaf-400">${donations.total_value ?? 0}</div>
+              <div className="text-xl font-bold text-leaf-400">₹{donations.total_value ?? 0}</div>
               <div className="text-[10px] text-slate-400 uppercase tracking-wider">Donated Value (FMV)</div>
             </div>
             <div className="rounded-lg bg-white/5 p-3 text-center">
-              <div className="text-xl font-bold text-leaf-400">${donations.tax_benefits ?? 0}</div>
+              <div className="text-xl font-bold text-leaf-400">₹{donations.tax_benefits ?? 0}</div>
               <div className="text-[10px] text-slate-400 uppercase tracking-wider">Tax Benefits Saved</div>
             </div>
           </div>
