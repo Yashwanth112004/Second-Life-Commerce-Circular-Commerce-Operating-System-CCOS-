@@ -57,7 +57,7 @@ function Nav() {
             ))}
           {user ? (
             <button onClick={logout} className="ml-2 rounded-lg px-3 py-2 text-sm text-slate-400 hover:text-white">
-              Logout ({user.name.split(" ")[0]})
+              Logout ({user.name?.split(" ")?.[0] || ""})
             </button>
           ) : (
             <NavLink to="/login" className="ml-2 btn-primary px-4 py-2 text-sm">

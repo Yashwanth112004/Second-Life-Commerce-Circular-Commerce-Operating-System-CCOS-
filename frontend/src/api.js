@@ -23,48 +23,64 @@ export const tokens = {
     },
 };
 
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
+export const getImageUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+    return url;
+  }
+  return `${API_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
+let onAuthFailure = null;
+export const registerAuthFailureCallback = (cb) => {
+  onAuthFailure = cb;
+};
+
 export const http = axios.create({
-    baseURL: "/api"
+  baseURL: `${API_URL}/api`
 });
 
 http.interceptors.request.use((cfg) => {
-    const t = tokens.access;
-    if (t) cfg.headers.Authorization = `Bearer ${t}`;
-    return cfg;
+  const t = tokens.access;
+  if (t) cfg.headers.Authorization = `Bearer ${t}`;
+  return cfg;
 });
 
 // On 401, try a one-time refresh, then replay the request.
 let refreshing = null;
 http.interceptors.response.use(
-    (r) => r,
-    async (error) => {
-        const original = error.config;
-        const status = error.response ? error.response.status : 0;
-        if (status === 401 && !original._retried && tokens.refresh) {
-            original._retried = true;
-            try {
-                if (!refreshing) {
-                    refreshing = axios
-                        .post("/api/auth/refresh", {
-                            refreshToken: tokens.refresh
-                        })
-                        .then((res) => {
-                            tokens.set(res.data);
-                            return res.data.accessToken;
-                        })
-                        .finally(() => {
-                            refreshing = null;
-                        });
-                }
-                const newAccess = await refreshing;
-                original.headers.Authorization = `Bearer ${newAccess}`;
-                return http(original);
-            } catch (e) {
-                tokens.clear();
-            }
+  (r) => r,
+  async (error) => {
+    const original = error.config;
+    const status = error.response ? error.response.status : 0;
+    if (status === 401 && !original._retried && tokens.refresh) {
+      original._retried = true;
+      try {
+        if (!refreshing) {
+          refreshing = axios
+            .post(`${API_URL}/api/auth/refresh`, {
+              refreshToken: tokens.refresh
+            })
+            .then((res) => {
+              tokens.set(res.data);
+              return res.data.accessToken;
+            })
+            .finally(() => {
+              refreshing = null;
+            });
         }
-        return Promise.reject(error);
+        const newAccess = await refreshing;
+        original.headers.Authorization = `Bearer ${newAccess}`;
+        return http(original);
+      } catch (e) {
+        tokens.clear();
+        if (onAuthFailure) onAuthFailure();
+      }
     }
+    return Promise.reject(error);
+  }
 );
 
 const data = (p) => p.then((r) => r.data);
@@ -115,10 +131,10 @@ export const api = {
     // donations
     donations: () => data(http.get("/donations")),
     donationAdvance: (id) => data(http.post(`/donations/${id}/advance`)),
-    donationReceiptUrl: (id) => `/api/donations/${id}/receipt.pdf`,
+    donationReceiptUrl: (id) => `${API_URL}/api/donations/${id}/receipt.pdf`,
     // inspection
     inspection: (returnId) => data(http.get(`/inspection/${returnId}`)),
-    inspectionPdfUrl: (returnId) => `/api/inspection/${returnId}/pdf`,
+    inspectionPdfUrl: (returnId) => `${API_URL}/api/inspection/${returnId}/pdf`,
     refurbishInstructions: (returnId, skillLevel = "intermediate", tools = []) => 
         data(http.get(`/inspection/${returnId}/refurbish-instructions?skillLevel=${skillLevel}${tools.length ? `&tools=${tools.join(",")}` : ""}`)),
     // demo

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { api, tokens } from "./api.js";
+import { api, tokens, registerAuthFailureCallback } from "./api.js";
 
 const AuthCtx = createContext(null);
 
@@ -8,6 +8,10 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    registerAuthFailureCallback(() => {
+      setUser(null);
+    });
+
     if (tokens.access) {
       api
         .me()

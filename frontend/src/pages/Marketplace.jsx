@@ -93,8 +93,8 @@ export default function Marketplace() {
       });
   };
 
-  const data = search.data;
-  const totalPages = data ? Math.max(1, Math.ceil(data.total / data.page_size)) : 1;
+  const data = search.data || {};
+  const totalPages = data.page_size ? Math.max(1, Math.ceil((data.total || 0) / data.page_size)) : 1;
 
   return (
     <div className="space-y-6">
@@ -127,9 +127,9 @@ export default function Marketplace() {
         </select>
       </div>
 
-      {buy.isSuccess && (
+      {buy.isSuccess && buy.data && (
         <div className="card border-leaf-500/40 text-leaf-300">
-          ✓ Purchased preloved — you earned {buy.data.green_credits_earned} GC and saved {buy.data.carbon.carbon_saved_kg} kg CO₂.
+          ✓ Purchased preloved — you earned {buy.data.green_credits_earned ?? 0} GC and saved {buy.data.carbon?.carbon_saved_kg ?? 0} kg CO₂.
         </div>
       )}
 
@@ -137,9 +137,9 @@ export default function Marketplace() {
         <Spinner label="Searching circular inventory…" />
       ) : (
         <>
-          <div className="text-sm text-slate-400">{data ? data.total : 0} results</div>
+          <div className="text-sm text-slate-400">{data.total ?? 0} results</div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {data && data.results.map((l) => (
+            {data.results && data.results.map((l) => (
               <div key={l.id} className="card overflow-hidden p-0 flex flex-col justify-between">
                 <div>
                   <img src={l.image_url} alt="" className="h-40 w-full object-cover"
@@ -150,9 +150,9 @@ export default function Marketplace() {
                       <GradeBadge grade={l.condition_grade} />
                     </div>
                     <div className="mt-3 flex items-baseline gap-2">
-                      <span className="text-2xl font-extrabold text-leaf-400">${l.price}</span>
-                      <span className="text-sm text-slate-500 line-through">${l.msrp}</span>
-                      <span className="pill bg-leaf-500/20 text-leaf-400">−{l.savings_pct}%</span>
+                      <span className="text-2xl font-extrabold text-leaf-400">${l.price ?? 0}</span>
+                      <span className="text-sm text-slate-500 line-through">${l.msrp ?? 0}</span>
+                      <span className="pill bg-leaf-500/20 text-leaf-400">−{l.savings_pct ?? 0}%</span>
                     </div>
 
                     {/* AI pricing badge */}
@@ -163,7 +163,7 @@ export default function Marketplace() {
 
                     <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
                       <span>📍 {l.seller_city}</span>
-                      <span>★ {Number(l.avg_rating).toFixed(1)} ({l.review_count})</span>
+                      <span>★ {Number(l.avg_rating || 0).toFixed(1)} ({l.review_count ?? 0})</span>
                     </div>
                   </div>
                 </div>
@@ -234,11 +234,11 @@ export default function Marketplace() {
                       <div className="h-2.5 w-full rounded-full bg-white/10 overflow-hidden">
                         <div className={`h-full rounded-full transition-all duration-500 ${
                           prediction.riskLevel === "HIGH" ? "bg-rose-500" : prediction.riskLevel === "MEDIUM" ? "bg-amber-500" : "bg-emerald-500"
-                        }`} style={{ width: `${prediction.returnProbability}%` }} />
+                        }`} style={{ width: `${prediction.returnProbability || 0}%` }} />
                       </div>
                       <div className="flex justify-between text-[11px] text-slate-500">
                         <span>LOW</span>
-                        <span className="font-bold text-slate-300">{prediction.returnProbability}% Probability</span>
+                        <span className="font-bold text-slate-300">{prediction.returnProbability ?? 0}% Probability</span>
                         <span>HIGH</span>
                       </div>
                     </div>
@@ -269,17 +269,17 @@ export default function Marketplace() {
               </div>
  
               {/* SSA Smart Size Advisor (Module 8) */}
-              {selectedListing.category === "apparel" && (
+              {selectedListing?.category === "apparel" && (
                 <div className="border border-white/5 rounded-xl p-4 bg-sky-500/5 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-slate-300">👕 Smart Size Advisor</span>
                     {sizeAdvice && (
                       <span className="pill text-[10px] font-bold border border-sky-500/30 bg-sky-500/10 text-sky-300">
-                        {sizeAdvice.confidenceScore}% Fit Confidence
+                        {sizeAdvice.confidenceScore ?? 0}% Fit Confidence
                       </span>
                     )}
                   </div>
- 
+  
                   {loadingSize ? (
                     <div className="py-2 flex flex-col items-center justify-center gap-1">
                       <Spinner label="Predicting perfect fit..." />
@@ -289,10 +289,10 @@ export default function Marketplace() {
                       <div className="flex justify-between items-baseline">
                         <span className="text-xs text-slate-400">Recommended Size:</span>
                         <span className="text-sm font-extrabold text-sky-300 bg-sky-500/20 px-2 py-0.5 rounded-lg border border-sky-500/40">
-                          Size {sizeAdvice.recommendedSize} ({sizeAdvice.fitPrediction})
+                          Size {sizeAdvice.recommendedSize ?? ""} ({sizeAdvice.fitPrediction ?? ""})
                         </span>
                       </div>
-                      <p className="text-xs text-slate-300 italic">"{sizeAdvice.reasoning}"</p>
+                      <p className="text-xs text-slate-300 italic">"{sizeAdvice.reasoning ?? ""}"</p>
                       
                       {sizeAdvice.alternativeSizes && sizeAdvice.alternativeSizes.length > 0 && (
                         <div className="text-[10px] text-slate-400 leading-normal border-t border-white/5 pt-1.5 mt-1">
@@ -300,7 +300,7 @@ export default function Marketplace() {
                           <ul className="list-disc list-inside space-y-0.5 mt-0.5">
                             {sizeAdvice.alternativeSizes.map((a, i) => (
                               <li key={i}>
-                                <span className="font-semibold text-sky-400">Size {a.size}:</span> {a.tradeoff}
+                                <span className="font-semibold text-sky-400">Size {a?.size ?? ""}:</span> {a?.tradeoff ?? ""}
                               </li>
                             ))}
                           </ul>
@@ -314,7 +314,7 @@ export default function Marketplace() {
               )}
 
               {/* Pricing breakdown */}
-              {selectedListing.markdown_schedule && (
+              {selectedListing?.markdown_schedule && (
                 <div className="rounded-xl bg-leaf-500/5 border border-leaf-500/10 p-3 text-xs text-slate-300">
                   <div className="font-bold text-leaf-400 mb-1">♺ Dynamic Circular Price Protected</div>
                   <span>This preloved price is calculated based on brand retention and regional demand velocity. If unsold, prices update automatically per circular scheduling.</span>
@@ -333,7 +333,6 @@ export default function Marketplace() {
           </div>
         )}
       </AnimatePresence>
-
     </div>
   );
 }

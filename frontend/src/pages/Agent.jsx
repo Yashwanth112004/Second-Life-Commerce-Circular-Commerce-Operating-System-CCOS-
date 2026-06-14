@@ -107,30 +107,30 @@ export default function Agent() {
         <div className="card">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="font-bold text-white">📡 Agent Activity Feed</h3>
-            <span className="text-xs text-slate-500">last scan: {new Date(activity.data.last_scan).toLocaleTimeString()}</span>
+            <span className="text-xs text-slate-500">last scan: {activity.data.last_scan ? new Date(activity.data.last_scan).toLocaleTimeString() : ""}</span>
           </div>
           <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <ActStat label="Listings generated" value={activity.data.stats.listings_generated} />
-            <ActStat label="Buyer matches found" value={activity.data.stats.buyer_matches_found} />
-            <ActStat label="Donations made" value={activity.data.stats.donations_made} />
-            <ActStat label="ARA-listed items" value={activity.data.stats.ara_listings} />
+            <ActStat label="Listings generated" value={activity.data.stats?.listings_generated ?? 0} />
+            <ActStat label="Buyer matches found" value={activity.data.stats?.buyer_matches_found ?? 0} />
+            <ActStat label="Donations made" value={activity.data.stats?.donations_made ?? 0} />
+            <ActStat label="ARA-listed items" value={activity.data.stats?.ara_listings ?? 0} />
           </div>
           <div className="space-y-1">
-            {activity.data.feed.length === 0 ? (
+            {(!activity.data.feed || activity.data.feed.length === 0) ? (
               <div className="text-sm text-slate-400">No activity yet — enable the agent and run a scan.</div>
             ) : activity.data.feed.map((f, i) => (
               <div key={i} className="flex items-center justify-between border-b border-white/5 py-1.5 text-sm last:border-0">
-                <span className="text-slate-300"><b className="text-white">{f.title}</b> {f.body ? `— ${f.body}` : ""}</span>
-                <span className="shrink-0 text-xs text-slate-500">{new Date(f.at).toLocaleDateString()}</span>
+                <span className="text-slate-300"><b className="text-white">{f?.title}</b> {f?.body ? `— ${f.body}` : ""}</span>
+                <span className="shrink-0 text-xs text-slate-500">{f?.at ? new Date(f.at).toLocaleDateString() : ""}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {listIt.isSuccess && (
+      {listIt.isSuccess && listIt.data && (
         <div className="card border-leaf-500/40 text-leaf-300">
-          ✓ Agent listed "{listIt.data.listing.title}" at ${listIt.data.listing.price} with {listIt.data.buyer_matches.matches.length} buyer matches.
+          ✓ Agent listed "{listIt.data.listing?.title}" at ${listIt.data.listing?.price} with {listIt.data.buyer_matches?.matches?.length ?? 0} buyer matches.
         </div>
       )}
 
@@ -142,14 +142,14 @@ export default function Agent() {
             <p className="text-lg text-white">{sugg.data.headline}</p>
           </motion.div>
           <div className="space-y-3">
-            {sugg.data.suggestions.map((s, i) => (
+            {(sugg.data.suggestions || []).map((s, i) => (
               <motion.div key={s.order_id} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                 className="card flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <img src={s.product.image_url} alt="" className="h-12 w-12 rounded-lg object-cover" onError={(e) => (e.currentTarget.style.visibility = "hidden")} />
+                  <img src={s.product?.image_url} alt="" className="h-12 w-12 rounded-lg object-cover" onError={(e) => (e.currentTarget.style.visibility = "hidden")} />
                   <div>
                     <div className="flex items-center gap-2">
-                      <div className="font-semibold text-white">{s.product.title}</div>
+                      <div className="font-semibold text-white">{s.product?.title}</div>
                       {s.is_eol && (
                         <span className="pill text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/20 animate-pulse">⚠️ EOL Alert</span>
                       )}
@@ -160,10 +160,10 @@ export default function Agent() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <div className="text-lg font-extrabold text-leaf-400">${s.estimated_value}</div>
-                    <div className="text-xs text-slate-500">+{s.projected_gc} GC · {s.projected_carbon_kg} kg</div>
+                    <div className="text-lg font-extrabold text-leaf-400">${s.estimated_value ?? 0}</div>
+                    <div className="text-xs text-slate-500">+{s.projected_gc ?? 0} GC · {s.projected_carbon_kg ?? 0} kg</div>
                   </div>
-                  <span className={`pill capitalize ${ACTION_STYLE[s.action]}`}>{s.action.replace("_", " ")}</span>
+                  <span className={`pill capitalize ${ACTION_STYLE[s.action]}`}>{s.action?.replace("_", " ")}</span>
                   {s.action === "sell_now" && (
                     <button onClick={() => setActiveResale(s)}
                       className="btn-primary py-2 text-sm">List it now</button>
@@ -196,7 +196,7 @@ export default function Agent() {
                       </span>
                     </div>
                     <p className="text-xs text-slate-400">
-                      Processing digital twin metrics for <span className="text-slate-300 font-semibold">{activeResale.product.title}</span>.
+                      Processing digital twin metrics for <span className="text-slate-300 font-semibold">{activeResale.product?.title}</span>.
                     </p>
                   </div>
 
@@ -302,25 +302,25 @@ export default function Agent() {
                   {/* Compact Digital Twin Listing Card */}
                   <div className="flex gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
                     <img
-                      src={activeResale.product.image_url}
+                      src={activeResale.product?.image_url}
                       alt=""
                       className="h-16 w-16 rounded-lg object-cover border border-white/10 shrink-0"
                     />
                     <div className="min-w-0 flex-1 flex flex-col justify-between">
                       <div>
                         <div className="font-semibold text-white truncate text-sm">
-                          {activeResale.product.title}
+                          {activeResale.product?.title}
                         </div>
                         <div className="text-xs text-slate-400">
-                          MSRP: ${activeResale.product.msrp} · Size: {listIt.data?.listing.size || activeResale.product.size || "M"}
+                          MSRP: ${activeResale.product?.msrp} · Size: {listIt.data?.listing?.size || activeResale.product?.size || "M"}
                         </div>
                       </div>
                       <div className="flex items-center justify-between mt-1">
                         <div className="text-leaf-400 font-extrabold text-lg">
-                          ${listIt.data?.listing.price}
+                          ${listIt.data?.listing?.price}
                         </div>
                         <div className="pill border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-[10px]">
-                          Expected Sale: {listIt.data?.pricing.expected_sale_time_days || 5} Days
+                          Expected Sale: {listIt.data?.pricing?.expected_sale_time_days || 5} Days
                         </div>
                       </div>
                     </div>

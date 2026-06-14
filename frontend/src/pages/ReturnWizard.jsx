@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { api } from "../api.js";
+import { api, getImageUrl } from "../api.js";
 import { GradeBadge, Section, Spinner } from "../components.jsx";
 
 const STEPS = ["Select item", "Upload item photos", "Upload packaging photos", "AI inspection", "Decision"];
@@ -136,12 +136,12 @@ export default function ReturnWizard() {
             {orders.map((o) => (
               <button key={o.id} disabled={busy} onClick={() => pickOrder(o)}
                 className="card flex items-center gap-4 text-left transition hover:border-leaf-500/50 disabled:opacity-50">
-                <img src={o.product.image_url} alt="" className="h-16 w-16 rounded-lg object-cover"
+                <img src={o.product?.image_url} alt="" className="h-16 w-16 rounded-lg object-cover"
                   onError={(e) => (e.currentTarget.style.visibility = "hidden")} />
                 <div className="min-w-0">
-                  <div className="font-semibold text-white">{o.product.title}</div>
+                  <div className="font-semibold text-white">{o.product?.title}</div>
                   <div className="text-xs text-slate-500">{o.order_number}</div>
-                  <div className="text-sm text-slate-400">{o.product.brand} · paid ${o.purchase_price} · est. now ${o.estimated_value}</div>
+                  <div className="text-sm text-slate-400">{o.product?.brand} · paid ${o.purchase_price} · est. now ${o.estimated_value}</div>
                 </div>
               </button>
             ))}
@@ -215,10 +215,10 @@ function UploadStep({ order, files, setFiles, title, subtitle, onContinue, showB
   return (
     <Section className="space-y-4">
       <div className="card flex items-center gap-4">
-        <img src={order.product.image_url} alt="" className="h-16 w-16 rounded-lg object-cover" />
+        <img src={order.product?.image_url} alt="" className="h-16 w-16 rounded-lg object-cover" />
         <div>
-          <div className="font-semibold text-white">{order.product.title}</div>
-          <div className="text-sm text-slate-400">{order.order_number} · {order.product.category}</div>
+          <div className="font-semibold text-white">{order.product?.title}</div>
+          <div className="text-sm text-slate-400">{order.order_number} · {order.product?.category}</div>
         </div>
       </div>
       <div>
@@ -293,6 +293,7 @@ function AnalysisOutcome({ analysis, selectedNgo, setSelectedNgo, onDecide, onAd
   const status = analysis.status;
   const r = analysis.result || {};
   const a = r.assessment || {};
+  const recommended = r.recommended || "";
   const modelLine = (
     <span className={r.source === "vision" ? "text-leaf-400" : r.source === "vision_fallback" ? "text-amber-300" : "text-rose-300"}>
       {r.model_used ? `Inspected by ${r.model_used}${r.source === "vision_fallback" ? " (fallback model)" : ""}` : "Vision AI unavailable"}
@@ -329,7 +330,7 @@ function AnalysisOutcome({ analysis, selectedNgo, setSelectedNgo, onDecide, onAd
           <div className="card">
             <h3 className="mb-3 font-bold text-white">🔍 AI Visual Product Inspection</h3>
             <div className="relative inline-block w-full rounded-xl overflow-hidden border border-white/10">
-              <img src={itemImages[0].url} alt="Uploaded item" className="w-full object-contain h-48 bg-black/40" />
+              <img src={getImageUrl(itemImages[0].url)} alt="Uploaded item" className="w-full object-contain h-48 bg-black/40" />
               {damages.length > 0 && (
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
                   {damages.map((d, i) => (
@@ -345,7 +346,7 @@ function AnalysisOutcome({ analysis, selectedNgo, setSelectedNgo, onDecide, onAd
             {itemImages.length > 1 && (
               <div className="mt-2 flex gap-2 overflow-x-auto">
                 {itemImages.slice(1).map((img, i) => (
-                  <img key={i} src={img.url} alt="" className="h-12 w-12 rounded-lg object-cover border border-white/10" />
+                  <img key={i} src={getImageUrl(img.url)} alt="" className="h-12 w-12 rounded-lg object-cover border border-white/10" />
                 ))}
               </div>
             )}
@@ -367,7 +368,7 @@ function AnalysisOutcome({ analysis, selectedNgo, setSelectedNgo, onDecide, onAd
               {packagingImages.length > 0 && (
                 <div className="mt-2 flex gap-2">
                   {packagingImages.map((img, i) => (
-                    <img key={i} src={img.url} alt="" className="h-10 w-10 rounded object-cover border border-white/10" />
+                    <img key={i} src={getImageUrl(img.url)} alt="" className="h-10 w-10 rounded object-cover border border-white/10" />
                   ))}
                 </div>
               )}

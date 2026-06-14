@@ -61,19 +61,22 @@ export default function Wallet() {
   };
 
   if (wallet.isLoading || carbon.isLoading) return <Spinner label="Loading your circular wallet…" />;
-  const w = wallet.data;
-  const c = carbon.data;
-  const next = w.next_level;
+  const w = wallet.data || {};
+  const c = carbon.data || {};
+  const next = w.next_level || {};
+  const equivalents = c.equivalents || {};
+  const timeline = c.timeline || [];
+  const byAction = c.by_action || [];
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-extrabold text-white">Circular Wallet & Impact</h1>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Stat label="Green Credits" value={`${w.green_credits} GC`} sub={`Rate: $${w.exchange_rate.toFixed(4)}/GC`} accent="text-leaf-400" />
-        <Stat label="USD Token Balance" value={`$${w.usd_balance.toFixed(2)}`} sub={`Total cash value: $${w.cash_value_usd.toFixed(2)}`} accent="text-amber-400" />
-        <Stat label="CO₂ saved" value={`${w.carbon_saved_kg} kg`} sub={c.equivalents.driving} accent="text-leaf-400" />
-        <Stat label="Level" value={w.level} sub={next.name ? `${next.gcToNext} GC to ${next.name}` : "Max level"} />
+        <Stat label="Green Credits" value={`${w.green_credits ?? 0} GC`} sub={`Rate: $${(w.exchange_rate || 0).toFixed(4)}/GC`} accent="text-leaf-400" />
+        <Stat label="USD Token Balance" value={`$${(w.usd_balance || 0).toFixed(2)}`} sub={`Total cash value: $${(w.cash_value_usd || 0).toFixed(2)}`} accent="text-amber-400" />
+        <Stat label="CO₂ saved" value={`${w.carbon_saved_kg ?? 0} kg`} sub={equivalents.driving ?? ""} accent="text-leaf-400" />
+        <Stat label="Level" value={w.level ?? "1"} sub={next.name ? `${next.gcToNext ?? 0} GC to ${next.name}` : "Max level"} />
       </div>
 
       {/* DeFi Token Swap and Carbon-Backed Verification Registry */}
@@ -108,7 +111,7 @@ export default function Wallet() {
             <div className="space-y-2">
               <div className="flex justify-between text-xs text-slate-400">
                 <span>Amount of Green Credits (GC)</span>
-                <span>Balance: {w.green_credits} GC</span>
+                <span>Balance: {w.green_credits ?? 0} GC</span>
               </div>
               <div className="relative">
                 <input 
@@ -127,16 +130,16 @@ export default function Wallet() {
             <div className="p-3 rounded-lg bg-white/5 border border-white/5 space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-slate-400">Algorithmic Rate:</span>
-                <span className="text-leaf-400 font-medium">${w.exchange_rate.toFixed(4)} USD / GC</span>
+                <span className="text-leaf-400 font-medium">${(w.exchange_rate || 0).toFixed(4)} USD / GC</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-slate-400">Total Value:</span>
-                <span className="text-white font-bold">${(Number(tradeAmount || 0) * w.exchange_rate).toFixed(2)} USD</span>
+                <span className="text-white font-bold">${(Number(tradeAmount || 0) * (w.exchange_rate || 0)).toFixed(2)} USD</span>
               </div>
               {tradeAction === "buy" && (
                 <div className="flex justify-between text-[10px] text-slate-500">
                   <span>Available USD Tokens:</span>
-                  <span>${w.usd_balance.toFixed(2)}</span>
+                  <span>${(w.usd_balance || 0).toFixed(2)}</span>
                 </div>
               )}
             </div>
@@ -168,7 +171,7 @@ export default function Wallet() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-white/5 p-2.5 rounded-lg border border-white/5">
                 <div className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Registry ID</div>
-                <div className="font-mono text-white mt-0.5 truncate text-[11px]">CCOS-REG-{user.id.slice(0,8).toUpperCase()}</div>
+                <div className="font-mono text-white mt-0.5 truncate text-[11px]">CCOS-REG-{(user?.id || "").slice(0, 8).toUpperCase()}</div>
               </div>
               <div className="bg-white/5 p-2.5 rounded-lg border border-white/5">
                 <div className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Verification Level</div>
@@ -182,7 +185,7 @@ export default function Wallet() {
               <div className="bg-white/5 p-2.5 rounded-lg border border-white/5">
                 <div className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Carbon Intensity Efficacy</div>
                 <div className="text-leaf-400 font-bold mt-0.5 text-[11px]">
-                  {w.green_credits > 0 ? (w.carbon_saved_kg / w.green_credits).toFixed(2) : "1.00"} kg CO₂/GC
+                  {(w.green_credits ?? 0) > 0 ? ((w.carbon_saved_kg || 0) / w.green_credits).toFixed(2) : "1.00"} kg CO₂/GC
                 </div>
               </div>
               <div className="bg-white/5 p-2.5 rounded-lg border border-white/5">
@@ -200,10 +203,10 @@ export default function Wallet() {
                 <span className="font-semibold text-leaf-400">Excellent</span>
               </div>
               <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-leaf-400 h-full rounded-full" style={{ width: `${Math.min(100, (w.carbon_saved_kg / Math.max(1, w.green_credits)) * 50)}%` }} />
+                <div className="bg-leaf-400 h-full rounded-full" style={{ width: `${Math.min(100, ((w.carbon_saved_kg || 0) / Math.max(1, w.green_credits || 1)) * 50)}%` }} />
               </div>
               <div className="text-[10px] text-slate-500 mt-1.5 leading-relaxed">
-                This account has a total backing of <b className="text-slate-300">{w.carbon_saved_kg} kg CO₂</b> offsets across <b className="text-slate-300">{w.green_credits}</b> active credit tokens. Higher offset intensity increases token value yield.
+                This account has a total backing of <b className="text-slate-300">{w.carbon_saved_kg ?? 0} kg CO₂</b> offsets across <b className="text-slate-300">{w.green_credits ?? 0}</b> active credit tokens. Higher offset intensity increases token value yield.
               </div>
             </div>
           </div>
@@ -213,11 +216,11 @@ export default function Wallet() {
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="card">
           <h3 className="mb-3 font-bold text-white">CO₂ saved over time</h3>
-          {c.timeline.length === 0 ? (
+          {timeline.length === 0 ? (
             <p className="text-sm text-slate-400">No activity yet — resell or donate an item to start saving.</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={c.timeline}>
+              <BarChart data={timeline}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff14" />
                 <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
                 <YAxis stroke="#94a3b8" fontSize={12} />
@@ -230,13 +233,13 @@ export default function Wallet() {
 
         <div className="card">
           <h3 className="mb-3 font-bold text-white">Savings by action</h3>
-          {c.by_action.length === 0 ? (
+          {byAction.length === 0 ? (
             <p className="text-sm text-slate-400">No circular actions recorded yet.</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={c.by_action} dataKey="carbon" nameKey="action" outerRadius={90} label>
-                  {c.by_action.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                <Pie data={byAction} dataKey="carbon" nameKey="action" outerRadius={90} label>
+                  {byAction.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: "#0f1420", border: "1px solid #ffffff22", borderRadius: 12 }} />
               </PieChart>

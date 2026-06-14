@@ -10,6 +10,9 @@ export const pool = new pg.Pool({
     connectionString: config.databaseUrl,
     max: 10,
     idleTimeoutMillis: 30000,
+    ssl: config.databaseUrl.includes("neon.tech") || config.env === "production"
+        ? { rejectUnauthorized: false }
+        : false,
 });
 
 export const query = (text, params) => pool.query(text, params);
