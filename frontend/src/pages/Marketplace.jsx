@@ -208,7 +208,7 @@ export default function Marketplace() {
               initial={{ opacity: 0, scale: 0.95, y: 15 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="w-full max-w-xl rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900 to-ink-950 p-8 shadow-[0_25px_60px_rgba(0,0,0,0.6)] space-y-6 backdrop-blur-xl relative overflow-hidden"
+              className={`w-full ${selectedListing?.category === "apparel" ? "max-w-4xl" : "max-w-xl"} rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900 to-ink-950 p-6 md:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.6)] space-y-6 backdrop-blur-xl relative overflow-hidden`}
             >
               
               <div className="flex items-center justify-between border-b border-white/5 pb-4">
@@ -245,133 +245,79 @@ export default function Marketplace() {
                 </div>
               </div>
 
-              {/* RIP Analysis */}
-              <div className="border border-white/5 rounded-2xl p-5 bg-gradient-to-tr from-white/[0.01] to-white/[0.03] space-y-4 shadow-inner">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-leaf-400 text-lg">📊</span>
-                    <span className="text-sm font-bold text-slate-200 tracking-wide">AI Return Risk Assessment</span>
-                  </div>
-                  {prediction && (
-                    <span className={`pill text-[11px] font-bold tracking-wider capitalize border px-2.5 py-0.5 rounded-full ${
-                      prediction.riskLevel === "HIGH" 
-                        ? "bg-rose-500/10 text-rose-400 border-rose-500/20" 
-                        : prediction.riskLevel === "MEDIUM" 
-                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20" 
-                          : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                    }`}>
-                      {prediction.riskLevel} RISK
-                    </span>
-                  )}
-                </div>
-
-                {loadingPredict ? (
-                  <div className="py-8 flex flex-col items-center justify-center gap-3">
-                    <Spinner label="Evaluating circular return patterns..." />
-                  </div>
-                ) : prediction ? (
-                  <div className="space-y-4">
-                    {/* Visual Gauge */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400 font-medium">Return Probability</span>
-                        <span className={`font-extrabold text-sm ${
-                          prediction.riskLevel === "HIGH" ? "text-rose-400" : prediction.riskLevel === "MEDIUM" ? "text-amber-400" : "text-emerald-400"
-                        }`}>{prediction.returnProbability ?? 0}%</span>
-                      </div>
-                      <div className="relative pt-1">
-                        <div className="h-2.5 w-full rounded-full bg-white/5 overflow-hidden">
-                          <div className={`h-full rounded-full transition-all duration-500 relative ${
-                            prediction.riskLevel === "HIGH" ? "bg-gradient-to-r from-rose-600 to-rose-400" : prediction.riskLevel === "MEDIUM" ? "bg-gradient-to-r from-amber-600 to-amber-400" : "bg-gradient-to-r from-emerald-600 to-emerald-400"
-                          }`} style={{ width: `${prediction.returnProbability || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Risk Factors */}
-                    {prediction.topFactors && prediction.topFactors.length > 0 && (
-                      <div className="space-y-2 rounded-xl bg-rose-500/[0.02] border border-rose-500/10 p-3">
-                        <div className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <span>⚠️</span> Top Risk Factors
-                        </div>
-                        <ul className="text-xs text-slate-300 space-y-1.5 pl-1">
-                          {prediction.topFactors.map((f, i) => (
-                            <li key={i} className="flex items-start gap-1.5">
-                              <span className="text-rose-500 mt-0.5">•</span>
-                              <span>{f}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Recommendations */}
-                    {prediction.recommendations && prediction.recommendations.length > 0 && (
-                      <div className="space-y-2 rounded-xl bg-emerald-500/[0.02] border border-emerald-500/10 p-3">
-                        <div className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <span>🌱</span> Recommended Mitigation
-                        </div>
-                        <ul className="text-xs text-slate-300 space-y-1.5 pl-1">
-                          {prediction.recommendations.map((r, i) => (
-                            <li key={i} className="flex items-start gap-1.5">
-                              <span className="text-emerald-500 mt-0.5">•</span>
-                              <span>{r}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-xs text-slate-500 text-center py-4 border border-dashed border-white/5 rounded-xl">
-                    Could not compute risk score. Proceed with checkout.
-                  </div>
-                )}
-              </div>
- 
-              {/* SSA Smart Size Advisor (Module 8) */}
-              {selectedListing?.category === "apparel" && (
-                <div className="border border-white/5 rounded-2xl p-5 bg-gradient-to-tr from-sky-500/[0.02] to-sky-500/[0.05] space-y-4 shadow-sm">
+              {/* Grid Wrapper for Side-by-Side Cards */}
+              <div className={selectedListing?.category === "apparel" ? "grid grid-cols-1 md:grid-cols-2 gap-5" : "space-y-6"}>
+                {/* RIP Analysis */}
+                <div className="border border-white/5 rounded-2xl p-5 bg-gradient-to-tr from-white/[0.01] to-white/[0.03] space-y-4 shadow-inner">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-sky-400 text-lg">👕</span>
-                      <span className="text-sm font-bold text-slate-200 tracking-wide">Smart Size Advisor</span>
+                      <span className="text-leaf-400 text-lg">📊</span>
+                      <span className="text-sm font-bold text-slate-200 tracking-wide">AI Return Risk Assessment</span>
                     </div>
-                    {sizeAdvice && (
-                      <span className="pill text-[10px] font-bold tracking-wider border border-sky-500/20 bg-sky-500/10 text-sky-300 rounded-full px-2.5 py-0.5">
-                        {sizeAdvice.confidenceScore ?? 0}% FIT CONFIDENCE
+                    {prediction && (
+                      <span className={`pill text-[11px] font-bold tracking-wider capitalize border px-2.5 py-0.5 rounded-full ${
+                        prediction.riskLevel === "HIGH" 
+                          ? "bg-rose-500/10 text-rose-400 border-rose-500/20" 
+                          : prediction.riskLevel === "MEDIUM" 
+                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20" 
+                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      }`}>
+                        {prediction.riskLevel} RISK
                       </span>
                     )}
                   </div>
-  
-                  {loadingSize ? (
-                    <div className="py-6 flex flex-col items-center justify-center gap-2">
-                      <Spinner label="Predicting body fit..." />
+
+                  {loadingPredict ? (
+                    <div className="py-8 flex flex-col items-center justify-center gap-3">
+                      <Spinner label="Evaluating circular return patterns..." />
                     </div>
-                  ) : sizeAdvice ? (
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center bg-sky-500/[0.03] border border-sky-500/10 rounded-xl p-3">
-                        <span className="text-xs text-slate-400 font-medium">Recommended Size</span>
-                        <span className="text-sm font-black text-sky-300 bg-sky-500/20 px-3 py-1 rounded-lg border border-sky-500/30 shadow-sm">
-                          Size {sizeAdvice.recommendedSize ?? ""} ({sizeAdvice.fitPrediction ?? ""})
-                        </span>
+                  ) : prediction ? (
+                    <div className="space-y-4">
+                      {/* Visual Gauge */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-slate-400 font-medium">Return Probability</span>
+                          <span className={`font-extrabold text-sm ${
+                            prediction.riskLevel === "HIGH" ? "text-rose-400" : prediction.riskLevel === "MEDIUM" ? "text-amber-400" : "text-emerald-400"
+                          }`}>{prediction.returnProbability ?? 0}%</span>
+                        </div>
+                        <div className="relative pt-1">
+                          <div className="h-2.5 w-full rounded-full bg-white/5 overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-500 relative ${
+                              prediction.riskLevel === "HIGH" ? "bg-gradient-to-r from-rose-600 to-rose-400" : prediction.riskLevel === "MEDIUM" ? "bg-gradient-to-r from-amber-600 to-amber-400" : "bg-gradient-to-r from-emerald-600 to-emerald-400"
+                            }`} style={{ width: `${prediction.returnProbability || 0}%` }} />
+                          </div>
+                        </div>
                       </div>
-                      {sizeAdvice.reasoning && (
-                        <div className="text-xs text-slate-300 bg-white/[0.01] rounded-lg p-2.5 border border-white/5 flex items-start gap-2">
-                          <span className="text-sky-400/70 text-sm">“</span>
-                          <span className="italic leading-relaxed">{sizeAdvice.reasoning}</span>
-                          <span className="text-sky-400/70 text-sm self-end">”</span>
+
+                      {/* Risk Factors */}
+                      {prediction.topFactors && prediction.topFactors.length > 0 && (
+                        <div className="space-y-2 rounded-xl bg-rose-500/[0.02] border border-rose-500/10 p-3">
+                          <div className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <span>⚠️</span> Top Risk Factors
+                          </div>
+                          <ul className="text-xs text-slate-300 space-y-1.5 pl-1">
+                            {prediction.topFactors.map((f, i) => (
+                              <li key={i} className="flex items-start gap-1.5">
+                                <span className="text-rose-500 mt-0.5">•</span>
+                                <span>{f}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       )}
-                      
-                      {sizeAdvice.alternativeSizes && sizeAdvice.alternativeSizes.length > 0 && (
-                        <div className="text-[11px] text-slate-400 leading-normal border-t border-white/5 pt-2.5">
-                          <span className="font-semibold text-slate-300">Fit Alternatives:</span>
-                          <ul className="space-y-1 mt-1.5 pl-0.5">
-                            {sizeAdvice.alternativeSizes.map((a, i) => (
-                              <li key={i} className="flex justify-between border-b border-white/[0.02] pb-1 last:border-0 last:pb-0">
-                                <span className="font-semibold text-sky-400">Size {a?.size ?? ""}</span>
-                                <span className="text-slate-300">{a?.tradeoff ?? ""}</span>
+
+                      {/* Recommendations */}
+                      {prediction.recommendations && prediction.recommendations.length > 0 && (
+                        <div className="space-y-2 rounded-xl bg-emerald-500/[0.02] border border-emerald-500/10 p-3">
+                          <div className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <span>🌱</span> Recommended Mitigation
+                          </div>
+                          <ul className="text-xs text-slate-300 space-y-1.5 pl-1">
+                            {prediction.recommendations.map((r, i) => (
+                              <li key={i} className="flex items-start gap-1.5">
+                                <span className="text-emerald-500 mt-0.5">•</span>
+                                <span>{r}</span>
                               </li>
                             ))}
                           </ul>
@@ -379,12 +325,69 @@ export default function Marketplace() {
                       )}
                     </div>
                   ) : (
-                    <div className="text-[10px] text-slate-500 text-center py-3 border border-dashed border-sky-500/10 rounded-xl">
-                      Sizing metrics unavailable. Proceed with selection.
+                    <div className="text-xs text-slate-500 text-center py-4 border border-dashed border-white/5 rounded-xl">
+                      Could not compute risk score. Proceed with checkout.
                     </div>
                   )}
                 </div>
-              )}
+   
+                {/* SSA Smart Size Advisor (Module 8) */}
+                {selectedListing?.category === "apparel" && (
+                  <div className="border border-white/5 rounded-2xl p-5 bg-gradient-to-tr from-sky-500/[0.02] to-sky-500/[0.05] space-y-4 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sky-400 text-lg">👕</span>
+                        <span className="text-sm font-bold text-slate-200 tracking-wide">Smart Size Advisor</span>
+                      </div>
+                      {sizeAdvice && (
+                        <span className="pill text-[10px] font-bold tracking-wider border border-sky-500/20 bg-sky-500/10 text-sky-300 rounded-full px-2.5 py-0.5">
+                          {sizeAdvice.confidenceScore ?? 0}% FIT CONFIDENCE
+                        </span>
+                      )}
+                    </div>
+    
+                    {loadingSize ? (
+                      <div className="py-6 flex flex-col items-center justify-center gap-2">
+                        <Spinner label="Predicting body fit..." />
+                      </div>
+                    ) : sizeAdvice ? (
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center bg-sky-500/[0.03] border border-sky-500/10 rounded-xl p-3">
+                          <span className="text-xs text-slate-400 font-medium">Recommended Size</span>
+                          <span className="text-sm font-black text-sky-300 bg-sky-500/20 px-3 py-1 rounded-lg border border-sky-500/30 shadow-sm">
+                            Size {sizeAdvice.recommendedSize ?? ""} ({sizeAdvice.fitPrediction ?? ""})
+                          </span>
+                        </div>
+                        {sizeAdvice.reasoning && (
+                          <div className="text-xs text-slate-300 bg-white/[0.01] rounded-lg p-2.5 border border-white/5 flex items-start gap-2">
+                            <span className="text-sky-400/70 text-sm">“</span>
+                            <span className="italic leading-relaxed">{sizeAdvice.reasoning}</span>
+                            <span className="text-sky-400/70 text-sm self-end">”</span>
+                          </div>
+                        )}
+                        
+                        {sizeAdvice.alternativeSizes && sizeAdvice.alternativeSizes.length > 0 && (
+                          <div className="text-[11px] text-slate-400 leading-normal border-t border-white/5 pt-2.5">
+                            <span className="font-semibold text-slate-300">Fit Alternatives:</span>
+                            <ul className="space-y-1 mt-1.5 pl-0.5">
+                              {sizeAdvice.alternativeSizes.map((a, i) => (
+                                <li key={i} className="flex justify-between border-b border-white/[0.02] pb-1 last:border-0 last:pb-0">
+                                  <span className="font-semibold text-sky-400">Size {a?.size ?? ""}</span>
+                                  <span className="text-slate-300">{a?.tradeoff ?? ""}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-slate-500 text-center py-3 border border-dashed border-sky-500/10 rounded-xl">
+                        Sizing metrics unavailable. Proceed with selection.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Pricing breakdown */}
               {selectedListing?.markdown_schedule && (
